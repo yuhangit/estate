@@ -1,0 +1,16 @@
+<useragents source="https://github.com/Garyuten/useragentswitcher">
+  <useragent name="Chrome 18.6.872.0 (Win 7)" value="Mozilla/5.0 (Windows NT 6.1) AppleWebKit/535.2 (KHTML, like Gecko) Chrome/18.6.872.0 Safari/535.2 UNTRUSTED/1.0 3gpp-gba UNTRUSTED/1.0"/>
+  <useragent name="Chrome 19.0.1061.1 (Win 8 - NT 6.2)" value="Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.1 Safari/536.3"/>
+  <useragent name="Chrome 20.0.1092.0 (Win 7)" value="Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.6 (KHTML, like Gecko) Chrome/20.0.1092.0 Safari/536.6"/>
+  <useragent name="Chrome 20.0.1090.0 (Win 8)" value="Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.6 (KHTML, like Gecko) Chrome/20.0.1090.0 Safari/536.6"/>
+  <useragent name="Chrome 22.0.1207.1 (Win 7 - 64 bit)" value="Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1"/>
+  <useragent name="Chrome 28.0.1469.0 (Win 7 - 64 bit)" value="Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML like Gecko) Chrome/28.0.1469.0 Safari/537.36"/>
+  <useragent name="Chrome 28.0.1469.0 (Win 8 - 64 bit)" value="Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML like Gecko) Chrome/28.0.1469.0 Safari/537.36"/>
+  <useragent name="Firefox 12.0 (Win 7 32)" value="Mozilla/5.0 (Windows NT 6.1; rv:12.0) Gecko/20120403211507 Firefox/12.0"/>
+  <useragent name="Firefox 14.0.1 (Win Vista)" value="Mozilla/5.0 (Windows NT 6.0; rv:14.0) Gecko/20100101 Firefox/14.0.1"/>
+  <useragent name="Firefox 15.0a1 (Win 7 64)" value="Mozilla/5.0 (Windows NT 6.1; WOW64; rv:15.0) Gecko/20120427 Firefox/15.0a1"/>
+  <useragent name="Firefox 16.0 (Win 8 64)" value="Mozilla/5.0 (Windows NT 6.2; Win64; x64; rv:16.0) Gecko/16.0 Firefox/16.0"/>
+  <useragent name="Firefox 19.0 (Win 8 32)" value="Mozilla/5.0 (Windows NT 6.2; rv:19.0) Gecko/20121129 Firefox/19.0"/>
+  <useragent name="Firefox 20.0 (Win 8 32)" value="Mozilla/5.0 (Windows NT 6.2; rv:20.0) Gecko/20121202 Firefox/20.0"/>
+  <useragent name="Firefox 21.0 (Win 7 32)" value="Mozilla/5.0 (Windows NT 6.1; rv:21.0) Gecko/20130401 Firefox/21.0"/>
+ </useragents>
