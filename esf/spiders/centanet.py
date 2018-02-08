@@ -32,7 +32,7 @@ class CentanetScrapeSpider(scrapy.Spider):
         self.start_urls = self._get_urls()
 
     def _get_urls(self):
-        self.cursor.execute("select url from index_pages where retrived = 0 and spider = '%s'" % self.index_name)
+        self.cursor.execute("select url from index_pages where retrived = 0 and spider = '%s' " % self.index_name)
         ls = [row[0] for row in self.cursor.fetchall()]
         return ls
 

@@ -74,8 +74,9 @@ class HTTPProxyMiddleware(object):
         self.query_proxies()
 
     def query_proxies(self):
-        api = "http://dev.kuaidaili.com/api/getproxy/?orderid=981755959684297&num=100&port=8080&b_pcchrome=1&b_pcie=1&b_pcff=1&protocol=1&method=1&an_an=1&an_ha=1&sp1=1&sep=1"
-        urls = [ 'http://%s' %ip for ip in requests.get(api,headers=self.headers).text.split()]
+        api = "http://dev.kuaidaili.com/api/getproxy/?orderid=981755959684297&num=100&port=8080&b_pcchr" \
+              "ome=1&b_pcie=1&b_pcff=1&protocol=1&method=1&an_an=1&an_ha=1&sp1=1&sep=1"
+        urls = [ 'http://%s' % ip for ip in requests.get(api,headers=self.headers).text.split()]
         # urls = [i.strip() for i in open("proxies.txt").readlines()]
         for url in urls:
             # req = requests.get(url,headers = self.headers)
@@ -91,7 +92,6 @@ class HTTPProxyMiddleware(object):
             # req.close()
             if url not in self.proxies:
                 self.proxies.append(url)
-                self.loger.info("add proxy: %s" %url)
         # self.start_page = self.end_page
         # self.end_page += 10
 
@@ -99,17 +99,22 @@ class HTTPProxyMiddleware(object):
         if time.time() - self.time > 600 and time.time() - self.time > 5: # api restrict
             self.loger.info("add new proxies")
             self.time = time.time()
-            self.proxies = []
+            self.proxies.clear()
             self.query_proxies()
             self.loger.info("%d proxies now " %len(self.proxies))
 
-        if hasattr(request.meta,"proxy"):
-            self.loger.info("request has proxy already, remove it")
+        if hasattr(request.meta, "proxy"):
+            self.loger.critical("request has proxy already, remove it")
             self.remove_failed_proxy(request,spider)
+        # else:
+        #     self.loger.critical("url %s has no proxy.", request.url)
+
+        if hasattr(request.meta, "timeout_retry"):
+            self.loger.critical("request url %s has timeout: %s")
 
         proxy = random.choice(self.proxies)
         request.meta['proxy'] = proxy
-        self.loger.info('url: %s Using proxy: %s',request.url, request.meta['proxy'])
+        #self.loger.critical('url: %s Using proxy: %s',request.url, request.meta['proxy'])
 
     def remove_failed_proxy(self, request, spider):
         failed_proxy = request.meta['proxy']
@@ -142,12 +147,13 @@ class HTTPProxyMiddleware(object):
         if request.url.startswith("http://10.") :
             return None
 
+        self.loger.info("exception:%s", str(exception))
+        if isinstance(exception,TimeoutError):
+            # self.loger.info("timeout error happened, retry: %s" % request.url)
+            request.meta["timeout_retry"] = request.meta.get("timeout_retry", 0) + 1
+
         if self.remove_failed_proxy(request, spider):
             return request
-        if isinstance(exception,TimeoutError):
-            self.loger.info("timeout error happened, retry: %s" % request.url)
-            return request
-        self.loger.info("exception:%s", str(exception))
         return request
 
     def process_response(self, request, response, spider):
@@ -155,5 +161,5 @@ class HTTPProxyMiddleware(object):
         if response.status == 200:
             return response
         # request.meta['cnt'] = request.meta.get('cnt', 0) + 1
-        self.loger.info("%s request status %s, retry again." %(request.url, response.status))
+        self.loger.info("%s request status %s, proxy: %s." %(request.url, response.status, request.meta.get("proxy")))
         return request

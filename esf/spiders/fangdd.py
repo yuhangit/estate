@@ -33,7 +33,7 @@ class FangDDScrapeSpider(scrapy.Spider):
         self.start_urls = self._get_urls()
 
     def _get_urls(self):
-        self.cursor.execute("select url from index_pages where retrived = 0 and spider = '%s'" % self.index_name)
+        self.cursor.execute("select url from index_pages where retrived = 0 and spider = '%s' limit 100" % self.index_name)
         ls = [row[0] for row in self.cursor.fetchall()]
         return ls
 
@@ -48,17 +48,17 @@ class FangDDScrapeSpider(scrapy.Spider):
 
     def parse(self, response):
 
-        district = response.xpath('(//a[@id = "list_105"]/../a)[1]/text()').extract_first()
-        subdistrict = response.xpath('(//a[@id = "list_105"]/../a)[2]/text()').extract_first()
+        district = response.xpath('(//div[@class="_23XzT"]//text())[1]').extract_first().strip().replace("\"", "")
+        subdistrict = response.xpath('(//div[@class="_23XzT"]//text())[2]').extract_first().strip().replace("\"", "")
 
-        for div in response.xpath('//dl[contains(@id,"list_D")]'):
+        for div in response.xpath('//ul[@class=""]/li'):
             l = ItemLoader(item=ScrapeItem(), selector=div)
             l.default_output_processor = TakeFirst()
             l.add_xpath("title",'(.//a)[2]/text()', MapCompose(lambda x: self.spc_reg.sub("",x)))
             l.add_xpath("url","(.//a)[2]/@href",
                         MapCompose(lambda x: urljoin(response.url,urlparse(x).path)))
-            l.add_xpath("price", './/p[@class="mt5 alignR"]/text()', Join())
-            l.add_xpath("address",'.//p[@class="mt10"]//text()',
+            l.add_xpath("price", './/span[text() = "万"]/..//text()', Join())
+            l.add_xpath("address",'.//span[@class="_13KXy"]//text()',
                         MapCompose(lambda x: self.spc_reg.sub("",x)),Join('-'))
             l.add_value("district",district)
             l.add_value("subdistrict",subdistrict)

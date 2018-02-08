@@ -22,7 +22,7 @@ USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 1
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
@@ -59,7 +59,8 @@ DOWNLOADER_MIDDLEWARES = {
     'esf.middlewares.proxy.HTTPProxyMiddleware': 400,
    # 'esf.middlewares.CustomRetry.CustomRetryMiddleware': 500,
     'scrapy.downloadermiddlewares.redirect.RedirectMiddleware':None,
-    'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware':None
+    'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware':None,
+    "scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware":None
     #'esf.middlewares.user_agent.RandomUserAgentMiddleware': 300
 }
 
@@ -97,7 +98,7 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # maximum number of times to retry
-RETRY_ITEMS = 50
+RETRY_ITEMS = 5
 # HTTP response codes to retry
 RETRY_HTTP_CODES = [500, 502, 503, 504, 302, 301, 404, 401, 402, 403, 307]
 DOWNLOAD_TIMEOUT = 5
