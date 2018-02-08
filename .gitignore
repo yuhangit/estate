@@ -100,7 +100,8 @@ ENV/
 # mypy
 .mypy_cache/
 
-# sqlite3 WAL
-*.db-shm
-*.db-wal
-*.db
+# data directory
+data/
+
+# pycharm idea
+.idea/
