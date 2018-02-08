@@ -110,7 +110,8 @@ class HTTPProxyMiddleware(object):
         #     self.loger.critical("url %s has no proxy.", request.url)
 
         if "timeout_retry" in request.meta:
-            self.loger.critical("request url %s has timeout: %s")
+            self.loger.critical("request url %s has timeout: %s", request.url,
+                                request.meta.get("timeout_retry", 0))
 
         proxy = random.choice(self.proxies)
         request.meta['proxy'] = proxy
