@@ -54,13 +54,8 @@ class FangDDScrapeSpider(scrapy.Spider):
         for div in response.xpath('//ul[@class=""]/li'):
             l = ItemLoader(item=ScrapeItem(), selector=div)
             l.default_output_processor = TakeFirst()
-<<<<<<< HEAD
             l.add_xpath("title",'(.//a)[1]//text()', MapCompose(lambda x: self.spc_reg.sub("",x)))
             l.add_xpath("url","(.//a)[1]//(@href",
-=======
-            l.add_xpath("title",'(.//a)[1]/text()', MapCompose(lambda x: self.spc_reg.sub("",x)))
-            l.add_xpath("url","(.//a)[1]/@href",
->>>>>>> 4246b612227e686f1eee6e18836aebfbbe36414c
                         MapCompose(lambda x: urljoin(response.url,urlparse(x).path)))
             l.add_xpath("price", './/span[text() = "万"]/..//text()', Join())
             l.add_xpath("address",'.//span[@class="_13KXy"]//text()',
