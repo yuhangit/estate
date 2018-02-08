@@ -103,13 +103,13 @@ class HTTPProxyMiddleware(object):
             self.query_proxies()
             self.loger.info("%d proxies now " %len(self.proxies))
 
-        if hasattr(request.meta, "proxy"):
+        if "proxy" in request.meta:
             self.loger.critical("request has proxy already, remove it")
             self.remove_failed_proxy(request,spider)
         # else:
         #     self.loger.critical("url %s has no proxy.", request.url)
 
-        if hasattr(request.meta, "timeout_retry"):
+        if "timeout_retry" in request.meta:
             self.loger.critical("request url %s has timeout: %s")
 
         proxy = random.choice(self.proxies)
