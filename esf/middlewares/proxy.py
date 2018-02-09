@@ -74,7 +74,7 @@ class HTTPProxyMiddleware(object):
         self.query_proxies()
 
     def query_proxies(self):
-        api = "http://dev.kuaidaili.com/api/getproxy/?orderid=981755959684297&num=100&port=8080&b_pcchr" \
+        api = "http://dev.kuaidaili.com/api/getproxy/?orderid=981755959684297&num=500&port=8080&b_pcchr" \
               "ome=1&b_pcie=1&b_pcff=1&protocol=1&method=1&an_an=1&an_ha=1&sp1=1&sep=1"
         urls = [ 'http://%s' % ip for ip in requests.get(api,headers=self.headers).text.split()]
         # urls = [i.strip() for i in open("proxies.txt").readlines()]

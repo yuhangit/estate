@@ -152,7 +152,7 @@ class FangIndexSpider(scrapy.Spider):
 
 
 class FangSpider(scrapy.Spider):
-    name = "FangSpider"
+    name = "FangDDSpider"
     start_urls = ["http://shanghai.fangdd.com/esf/"]
     # rules = (
     #     Rule(LinkExtractor(restrict_xpaths='//a[text() =">"]'),

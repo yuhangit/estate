@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from esf.items import ScrapeItem,IndexItem
+from esf.items import ScrapeItem, IndexItem, DistinctItem
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose,Join,TakeFirst
 from scrapy.linkextractors import LinkExtractor
@@ -220,9 +220,10 @@ class CentanetAgentAllScrapeScripe(scrapy.Spider):
         logging.critical("count: %s" % i)
 
 
-class CentanetNewHouseSpider(scrapy.Spider):
-    name = "FangSpider"
-    start_urls = ["http://shanghai.fangdd.com/esf/"]
+class CentanetSpider(scrapy.Spider):
+    name = "CentanetSpider"
+    allowed_domains = ["sh.centanet.com"]
+    start_urls = ["http://sh.centanet.com/ershoufang/", "http://sh.centanet.com/xinfang/"]
     # rules = (
     #     Rule(LinkExtractor(restrict_xpaths='//a[text() =">"]'),
     #          callback='parse_item', follow=False),)
@@ -236,21 +237,40 @@ class CentanetNewHouseSpider(scrapy.Spider):
         self.cursor.execute("PRAGMA JOURNAL_MODE =WAL ")
 
     def parse(self, response):
-        dist_urls = response.xpath('(//a[text() = "不限"])[1]/ancestor::ul//a[not(text() = "不限")]/@href').extract()
+        dist_urls = response.xpath('((//*[text() = "不限"])[1]/../*[not(text() = "不限")]')
 
         for dist_url in dist_urls:
-            url = response.urljoin(dist_url)
-            yield Request(url, callback=self.get_subdist_urls)
+            url = response.urljoin(dist_url.xpath('./@href').extract())
+            distinct = dist_url.xpath('./text()').extract()
+            yield Request(url, callback=self.get_subdist_urls, meta={"district":distinct})
 
     def get_subdist_urls(self, response):
-
-        subdist_urls = response.xpath('(//a[text() = "不限"])[2]/ancestor::ul//a[not(text() = "不限")]/@href').extract()
+        subdist_urls = response.xpath('//p[@id="PanelBlock"]//a[not(text() = "不限")]')
         for subdist_url in subdist_urls:
-            url = response.urljoin(subdist_url)
-            yield Request(url,callback=self.parse_index)
+            subdistinct = subdist_url.xpath('./text()')
+            url = response.urljoin(subdist_url.xpath('./@href'))
 
-    def parse_index(self, response):
-        self.logger.info("starting parse item")
+            l = ItemLoader(item=DistinctItem())
+            l.add_value("url",url)
+            l.add_value("district", response.meta.get("district"))
+            l.add_value("subdistrict", subdistinct)
+            l.add_value("source", response.request.url)
+            l.add_value("project", self.settings.get("BOT_NAME"))
+            l.add_value("spider", self.name)
+            l.add_value("server", socket.gethostname())
+            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+            yield l.load_item()
+            if '/ershoufang/' in url:
+                yield Request(url, callback=self.parse_index_secondhouse)
+            elif "/xinfang/" in url:
+                yield Request(url, callback=self.parse_index_newhouse)
+
+    def parse_index_newhouse(self, response):
+        pass
+
+    def parse_index_secondhouse(self, response):
+        self.logger.info("starting parse secound house: %s", response.url)
 
         last_page = response.xpath('//div[@class="_39bCK"]//a[contains(@data-analytics-track-event,"event")][last()]/@href').extract_first()
         if last_page:
@@ -287,9 +307,10 @@ class CentanetNewHouseSpider(scrapy.Spider):
             l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
             yield l.load_item()
-            yield Request(url, callback=self.parse_item)
+            yield Request(url, callback=self.parse_item_secondhouse)
 
-    def parse_item(self, response):
+
+    def parse_item_secondhouse(self, response):
         district = response.xpath('(//div[@class="_23XzT"]//text())[1]').extract_first().strip().replace("\"", "")
         subdistrict = response.xpath('(//div[@class="_23XzT"]//text())[2]').extract_first().strip().replace("\"", "")
 

@@ -7,7 +7,7 @@
 import sqlite3
 from scrapy.utils.project import get_project_settings as settings
 import logging
-from esf.items import IndexItem,ScrapeItem
+from esf.items import IndexItem,ScrapeItem,DistinctItem
 
 
 class SqlitePipeline(object):
@@ -34,6 +34,13 @@ class SqlitePipeline(object):
                                       ,item.get("date"),item.get("source"),item.get("project")
                                       ,item.get("server"),item.get("spider")))
 
+        elif isinstance(item, DistinctItem):
+            stmt = """insert into district (district, subdistrict, url,source, project, server, dt, spider)
+                        VALUES (?,?,?,?,?,?,?,?)
+            """
+            self.cursor.execute(stmt, (item.get("district"), item.get("subdistrict"), item.get("url")
+                                       ,item.get("source"),item.get("project"), item.get("server"), item.get("date")
+                                       ,item.get("spider")))
         self.cnx.commit()
         return item
 

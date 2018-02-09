@@ -8,34 +8,41 @@
 import scrapy
 from scrapy import Field
 
+
 class EsfItem(scrapy.Item):
+    pass
     # define the fields for your item here like:
     # name = scrapy.Field()
-    pass
 
 
-class ScrapeItem(scrapy.Item):
+class HouseKeepingItem(scrapy.Item):
+    # housekeeping
+    date = Field()
+    source = Field()
+    spider = Field()
+    project = Field()
+    server = Field()
+
+
+class DistinctItem(HouseKeepingItem):
+    district = Field()
+    subdistrict = Field()
+    url = Field()
+    source = Field()
+
+
+class ScrapeItem(HouseKeepingItem):
     title = Field()
     url = Field()
     price = Field()
     address = Field()
     district = Field()
     subdistrict = Field()
-
-    # housekeeping
-    date = Field()
-    source = Field()
-    spider = Field()
-    project = Field()
-    server = Field()
+    agent_name = Field()
+    agent_company = Field()
+    agent_phone = Field()
 
 
-class IndexItem(scrapy.Item):
+class IndexItem(HouseKeepingItem):
     url = Field()
     retrived = Field()
-    # housekeeping
-    date = Field()
-    source = Field()
-    spider = Field()
-    project = Field()
-    server = Field()
