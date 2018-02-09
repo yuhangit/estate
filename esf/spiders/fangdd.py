@@ -151,3 +151,101 @@ class FangIndexSpider(scrapy.Spider):
             yield l.load_item()
 
 
+class FangSpider(scrapy.Spider):
+    name = "FangSpider"
+    start_urls = ["http://shanghai.fangdd.com/esf/"]
+    # rules = (
+    #     Rule(LinkExtractor(restrict_xpaths='//a[text() =">"]'),
+    #          callback='parse_item', follow=False),)
+    page_num_reg = re.compile(r"\d{1,2}/$")
+    spc_reg = re.compile(r"\s+")
+
+    def __init__(self):
+        super(self.__class__,self).__init__()
+        self.cnx = sqlite3.connect(get_project_settings().get("STORE_DATABASE"))
+        self.cursor = self.cnx.cursor()
+        self.cursor.execute("PRAGMA JOURNAL_MODE =WAL ")
+
+    def parse(self, response):
+        dist_urls = response.xpath('(//a[text() = "不限"])[1]/ancestor::ul//a[not(text() = "不限")]/@href').extract()
+
+        for dist_url in dist_urls:
+            url = response.urljoin(dist_url)
+            yield Request(url, callback=self.get_subdist_urls)
+
+    def get_subdist_urls(self, response):
+
+        subdist_urls = response.xpath('(//a[text() = "不限"])[2]/ancestor::ul//a[not(text() = "不限")]/@href').extract()
+        for subdist_url in subdist_urls:
+            url = response.urljoin(subdist_url)
+            yield Request(url,callback=self.parse_index)
+
+    def parse_index(self, response):
+        self.logger.info("starting parse item")
+
+        last_page = response.xpath('//div[@class="_39bCK"]//a[contains(@data-analytics-track-event,"event")][last()]/@href').extract_first()
+        if last_page:
+            print('-'*12,self.page_num_reg.findall(last_page) ,'-'*12)
+            last_page_num = int(self.page_num_reg.findall(last_page)[0][:-1])
+
+            for i in range(1,last_page_num+1):
+
+                l = ItemLoader(item=IndexItem())
+                l.default_output_processor = TakeFirst()
+                url = response.urljoin(self.page_num_reg.sub(r'%s/' %i, last_page))
+                l.add_value("url", url)
+                l.add_value("retrived", 0)
+
+                l.add_value("source", response.request.url)
+                l.add_value("project", self.settings.get("BOT_NAME"))
+                l.add_value("spider", self.name)
+                l.add_value("server", socket.gethostname())
+                l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+                yield l.load_item()
+                yield Request(url, callback=self.parse_item)
+        else:
+            l = ItemLoader(item=IndexItem())
+            l.default_output_processor = TakeFirst()
+            url = response.urljoin(response.url)
+            l.add_value("url", response.urljoin(response.url))
+            l.add_value("retrived", 0)
+
+            l.add_value("source", response.request.url)
+            l.add_value("project", self.settings.get("BOT_NAME"))
+            l.add_value("spider", self.name)
+            l.add_value("server", socket.gethostname())
+            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+            yield l.load_item()
+            yield Request(url, callback=self.parse_item)
+
+    def parse_item(self, response):
+        district = response.xpath('(//div[@class="_23XzT"]//text())[1]').extract_first().strip().replace("\"", "")
+        subdistrict = response.xpath('(//div[@class="_23XzT"]//text())[2]').extract_first().strip().replace("\"", "")
+
+        for div in response.xpath('//ul[@class=""]/li'):
+            l = ItemLoader(item=ScrapeItem(), selector=div)
+            l.default_output_processor = TakeFirst()
+            l.add_xpath("title", '(.//a)[1]//text()', MapCompose(lambda x: self.spc_reg.sub("", x)))
+            l.add_xpath("url", "(.//a)[1]//@href",
+                        MapCompose(lambda x: urljoin(response.url, urlparse(x).path)))
+            l.add_xpath("price", './/span[text() = "万"]/..//text()', Join())
+            l.add_xpath("address", './/span[@class="_13KXy"]//text()',
+                        MapCompose(lambda x: self.spc_reg.sub("", x)), Join('-'))
+            l.add_value("district", district)
+            l.add_value("subdistrict", subdistrict)
+
+            # housekeeping
+            l.add_value("source", response.url)
+            l.add_value("project", self.settings.get("BOT_NAME"))
+            l.add_value("spider", self.name)
+            l.add_value("server", socket.gethostname())
+            l.add_value("date", datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+
+            yield l.load_item()
+
+
+        self.logger.critical("update <%s> in index page", response.url)
+        self.cursor.execute("update index_pages set retrived = ? where url = ?", [1, response.url])
+        self.cnx.commit()

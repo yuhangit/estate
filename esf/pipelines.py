@@ -7,20 +7,15 @@
 import sqlite3
 from scrapy.utils.project import get_project_settings as settings
 import logging
+from esf.items import IndexItem,ScrapeItem
 
 
 class SqlitePipeline(object):
     collection_name = "scrapy_items"
 
-    def __init__(self):
-        self.cnx = sqlite3.connect(settings().get("STORE_DATABASE"))
-        self.cursor = self.cnx.cursor()
-        self.cursor.execute("PRAGMA JOURNAL_MODE=WAL ")
-        self.logger = logging.Logger(__file__)
-
     def process_item(self, item, spider):
         self.logger.info("start pipelien %s process spider %s" %(self.collection_name, spider.name))
-        if spider.name.find('IndexSpider') >= 0:
+        if isinstance(item, IndexItem):
             stmt = '''
                 insert into index_pages(url, retrived, source, project, server, dt, spider) VALUES 
                 (?,?,?,?,?,?,?)
@@ -29,7 +24,7 @@ class SqlitePipeline(object):
                                       item.get("project"),item.get("server"),item.get("date")
                                       ,item.get("spider")))
 
-        elif spider.name.find('ScrapeSpider') >= 0:
+        elif isinstance(item, ScrapeItem):
 
             stmt = '''insert into properties(title, url, price, address, district,
                         subdistrict, dt, source, project, server,spider) 
@@ -38,12 +33,16 @@ class SqlitePipeline(object):
                                       item.get("address"),item.get("district"),item.get("subdistrict")
                                       ,item.get("date"),item.get("source"),item.get("project")
                                       ,item.get("server"),item.get("spider")))
+
         self.cnx.commit()
         return item
-    def check_exists(self,tbl, spider,url):
-        stmt = "select count(*) from %s where spider = ? and url = ? " % tbl
-        self.cursor.execute(stmt,(spider, url))
-        return self.cursor.fetchall()[0][0] > 0
-    def __del__(self):
+
+    def open_spider(self, spider):
+        self.cnx = sqlite3.connect(settings().get("STORE_DATABASE"))
+        self.cursor = self.cnx.cursor()
+        self.cursor.execute("PRAGMA JOURNAL_MODE=WAL ")
+        self.logger = logging.Logger(__file__)
+
+    def close_spider(self, spider):
         self.cursor.close()
         self.cnx.close()

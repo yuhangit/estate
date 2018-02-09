@@ -104,7 +104,7 @@ class HTTPProxyMiddleware(object):
             self.loger.info("%d proxies now " %len(self.proxies))
 
         if "proxy" in request.meta:
-            self.loger.critical("request has proxy already, remove it")
+            self.loger.critical("request <%s> has proxy already, remove it", request.url)
             self.remove_failed_proxy(request,spider)
         # else:
         #     self.loger.critical("url %s has no proxy.", request.url)
@@ -152,7 +152,6 @@ class HTTPProxyMiddleware(object):
         if isinstance(exception,TimeoutError):
             # self.loger.info("timeout error happened, retry: %s" % request.url)
             request.meta["timeout_retry"] = request.meta.get("timeout_retry", 0) + 1
-            self.loger.critical("url: %s, retry time: %d",request.url, request.meta.get("timeout_retry"))
 
         if self.remove_failed_proxy(request, spider):
             return request

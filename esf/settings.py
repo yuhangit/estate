@@ -121,4 +121,4 @@ REQUESTS_HEADERS = {
 }
 
 # user for store data spider_name + STORE_DATABASE_BASE
-STORE_DATABASE = "data/esf_urls.db"
+STORE_DATABASE = "data/esf_urls_test.db"
