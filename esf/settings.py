@@ -101,7 +101,7 @@ ITEM_PIPELINES = {
 RETRY_ITEMS = 5
 # HTTP response codes to retry
 RETRY_HTTP_CODES = [500, 502, 503, 504, 302, 301, 404, 401, 402, 403, 307]
-DOWNLOAD_TIMEOUT = 5
+DOWNLOAD_TIMEOUT = 10
 
 
 # logging
@@ -115,6 +115,7 @@ TOR_PASSWORD = '16:81270390EE65C6F1606CBFF160A272B91884D1106963ACF2BC872EBBC2'
 #
 MAX_REQ_PER_IP = 1000
 
+PROXY_API = "http://dev.kuaidaili.com/api/getproxy/?orderid=981755959684297&num=100&b_pcchrome=1&b_pcie=1&b_pcff=1&protocol=1&method=2&an_an=1&an_ha=1&sep=1"
 # used for requests
 REQUESTS_HEADERS = {
     "User-Agent":'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'

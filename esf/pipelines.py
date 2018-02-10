@@ -7,7 +7,7 @@
 import sqlite3
 from scrapy.utils.project import get_project_settings as settings
 import logging
-from esf.items import IndexItem,ScrapeItem,DistinctItem
+from esf.items import IndexItem,ScrapeItem,DistrictItem
 
 
 class SqlitePipeline(object):
@@ -27,14 +27,16 @@ class SqlitePipeline(object):
         elif isinstance(item, ScrapeItem):
 
             stmt = '''insert into properties(title, url, price, address, district,
-                        subdistrict, dt, source, project, server,spider) 
-                      values (?,?,?,?,?,?,?,?,?,?,?)'''
+                        subdistrict, dt, source, project, server,spider,agent_name,
+                        agent_company,agent_phone) 
+                      values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
             self.cursor.execute(stmt,(item.get("title"),item.get("url"),item.get("price"),
                                       item.get("address"),item.get("district"),item.get("subdistrict")
                                       ,item.get("date"),item.get("source"),item.get("project")
-                                      ,item.get("server"),item.get("spider")))
+                                      ,item.get("server"),item.get("spider"),
+                                      item.get("agent_name"),item.get("agent_company"),item.get("agent_phone")))
 
-        elif isinstance(item, DistinctItem):
+        elif isinstance(item, DistrictItem):
             stmt = """insert into district (district, subdistrict, url,source, project, server, dt, spider)
                         VALUES (?,?,?,?,?,?,?,?)
             """

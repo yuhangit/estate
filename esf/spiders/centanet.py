@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from esf.items import ScrapeItem, IndexItem, DistinctItem
+from esf.items import ScrapeItem, IndexItem, DistrictItem
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose,Join,TakeFirst
 from scrapy.linkextractors import LinkExtractor
@@ -250,7 +250,7 @@ class CentanetSpider(scrapy.Spider):
             subdistinct = subdist_url.xpath('./text()')
             url = response.urljoin(subdist_url.xpath('./@href'))
 
-            l = ItemLoader(item=DistinctItem())
+            l = ItemLoader(item=DistrictItem())
             l.add_value("url",url)
             l.add_value("district", response.meta.get("district"))
             l.add_value("subdistrict", subdistinct)

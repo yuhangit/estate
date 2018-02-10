@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from esf.items import ScrapeItem, IndexItem, DistinctItem
+from esf.items import ScrapeItem, IndexItem, DistrictItem
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose,Join,TakeFirst
 from scrapy.linkextractors import LinkExtractor
@@ -54,7 +54,7 @@ class FangScrapeSpider(scrapy.Spider):
             l = ItemLoader(item=ScrapeItem(), selector=div)
             l.default_output_processor = TakeFirst()
             url = urljoin(response.url, urlparse(div.xpath("(.//a)[1]//@href").extract_first()).path)
-            print(url, district, subdistrict)
+
             yield Request(url, callback=self.scrape_content_secondhouse, meta={"district":district,"subdistrict":subdistrict})
         self._upd_retrived(response.url, 1)
         #i['domain_id'] = response.xpath('//input[@id="sid"]/@value').extract()
@@ -205,14 +205,15 @@ class FangAllScrapeScripe(scrapy.Spider):
 class FangSpider(scrapy.Spider):
     name = "FangSpider"
     allowed_domains = ["fang.com"]
-    start_urls = ["http://esf.sh.fang.com/", "http://sh.centanet.com/xinfang/"]
+    #start_urls = ["http://esf.sh.fang.com/", "http://newhouse.sh.fang.com/"]
+    start_urls = ["http://esf.sh.fang.com/"]
+    # start_urls = ["http://newhouse.sh.fang.com/house/s/"]
     # rules = (
     #     Rule(LinkExtractor(restrict_xpaths='//a[text() =">"]'),
     #          callback='parse_item', follow=False),)
     # extract page number
     page_num_reg = re.compile(r"(\d)(\d+)/$") # can get more item with add j3100 parameter
     spc_reg = re.compile(r"\s+")
-
 
     def __init__(self):
         super(self.__class__,self).__init__()
@@ -226,24 +227,24 @@ class FangSpider(scrapy.Spider):
         for dist_url in dist_urls:
             url = response.urljoin(urlparse(dist_url.xpath('./@href').extract_first()).path)
 
-            distinct = dist_url.xpath('./text()').extract()
-
+            distinct = dist_url.xpath('./text()').extract_first()
             if 'esf.sh.fang.com' in url:
                 yield Request(url, callback=self.get_subdist_urls_secondhouse, meta={"district":distinct})
             elif 'newhouse.sh.fang.com' in url:
                 yield Request(url, callback=self.get_subdist_urls_newhouse, meta={"district":distinct})
 
     def get_subdist_urls_secondhouse(self, response):
+        district = response.meta.get("district")
         subdist_urls = response.xpath('(//*[text() = "不限"])[2]/following-sibling::a')
         for subdist_url in subdist_urls:
-            subdistinct = subdist_url.xpath('./text()').extract_first()
+            subdistrict = subdist_url.xpath('./text()').extract_first()
             url = response.urljoin(urlparse(subdist_url.xpath('./@href').extract_first()).path) + 'j3100/'
 
-            l = ItemLoader(item=DistinctItem())
+            l = ItemLoader(item=DistrictItem())
             l.default_output_processor = TakeFirst()
             l.add_value("url",url)
-            l.add_value("district", response.meta.get("district"))
-            l.add_value("subdistrict", subdistinct)
+            l.add_value("district", district)
+            l.add_value("subdistrict", subdistrict)
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
@@ -251,70 +252,16 @@ class FangSpider(scrapy.Spider):
             l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
             yield l.load_item()
-            yield Request(url, callback=self.parse_index_secondhouse, meta={"subdistinct":subdistinct})
-
-    def get_subdist_urls_newhouse(self, response):
-        subdist_urls = response.xpath('(//li[@id=""])[1]/a')
-        for subdist_url in subdist_urls:
-            subdistinct = subdist_url.xpath('./text()')
-            url =  response.urljoin(urlparse(subdist_url.xpath('./@href')).path)
-            l = ItemLoader(item=DistinctItem())
-            l.default_output_processor = TakeFirst()
-            l.add_value("url", url)
-            l.add_value("district", response.meta.get("district"))
-            l.add_value("subdistrict", subdistinct)
-
-            l.add_value("source", response.request.url)
-            l.add_value("project", self.settings.get("BOT_NAME"))
-            l.add_value("spider", self.name)
-            l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-            yield l.load_item()
-            yield Request(url, callback=self.parse_index_newhouse, meta={"subdistinct": subdistinct})
-
-    def parse_index_newhouse(self, response):
-        self.logger.info("starting parse new house: %s", response.url)
-        last_page = urlparse(response.xpath('//a[text()="尾页"]/@href').extract_first())
-        if last_page:
-            self.logger.info('-' * 12 + str(self.page_num_reg.findall(last_page)[0][1]) + '-' * 12)
-            last_page_num = int(self.page_num_reg.findall(last_page)[0][1])
-            for i in range(1, last_page_num + 1):
-                l = ItemLoader(item=IndexItem())
-                l.default_output_processor = TakeFirst()
-                url = response.urljoin(self.page_num_reg.sub(r'\g<1>%s/' % i, last_page))
-                l.add_value("url", url)
-                l.add_value("retrived", 0)
-
-                l.add_value("source", response.request.url)
-                l.add_value("project", self.settings.get("BOT_NAME"))
-                l.add_value("spider", self.name)
-                l.add_value("server", socket.gethostname())
-                l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-                yield l.load_item()
-                yield Request(url, callback=self.parse_item_newhouse)
-            else:
-                l = ItemLoader(item=IndexItem())
-                l.default_output_processor = TakeFirst()
-                url = response.urljoin(response.url)
-                l.add_value("url", response.urljoin(response.url))
-                l.add_value("retrived", 0)
-
-                l.add_value("source", response.request.url)
-                l.add_value("project", self.settings.get("BOT_NAME"))
-                l.add_value("spider", self.name)
-                l.add_value("server", socket.gethostname())
-                l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-                yield l.load_item()
-                yield Request(url, callback=self.parse_item_newhouse)
+            yield Request(url, callback=self.parse_index_secondhouse, meta=
+                {"district":district,"subdistrict":subdistrict})
 
     def parse_index_secondhouse(self, response):
-        self.logger.info("starting parse secound house: %s", response.url)
+        self.logger.critical("starting parse index page of second house: %s", response.url)
         last_page = urlparse(response.xpath('//a[text()="末页"]/@href').extract_first()).path
+        district = response.meta.get("district")
+        subdistrict = response.meta.get("subdistrict")
         if last_page:
-            self.logger.info('-' * 12, self.page_num_reg.findall(last_page)[0][1], '-' * 12)
+            self.logger.info('-' * 12 + str(self.page_num_reg.findall(last_page)[0][1])+ '-' * 12)
             last_page_num = int(self.page_num_reg.findall(last_page)[0][1])
 
             for i in range(1,last_page_num+1):
@@ -332,7 +279,8 @@ class FangSpider(scrapy.Spider):
                 l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
                 yield l.load_item()
-                yield Request(url, callback=self.parse_item_secondhouse)
+                yield Request(url, callback=self.parse_item_secondhouse,
+                              meta={"district":district,"subdistrict":subdistrict})
         else:
             l = ItemLoader(item=IndexItem())
             l.default_output_processor = TakeFirst()
@@ -347,34 +295,24 @@ class FangSpider(scrapy.Spider):
             l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
             yield l.load_item()
-            yield Request(url, callback=self.parse_item_secondhouse)
-
-    def parse_item_newhouse(self, response):
-        for div in response.xpath('//div[@class="clearfix"]'):
-            l = ItemLoader(item=ScrapeItem(), selector=div)
-            l.default_output_processor=TakeFirst()
-            url = urljoin(response.url,urlparse(div.xpath('(./a)[1]/@href').extract()).path)
-            l.add_xpath("title", '(./a)[2]/text()')
-
-            l.add_value("district", response.meta.get("district"))
-            l.add_value("subdistrict", response.meta.get("subdistrict"))
-            l.add_value("url", url)
-
-            l.add_value("source", response.url)
-            l.add_value("project", self.settings.get("BOT_NAME"))
-            l.add_value("spider", self.name)
-            l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-            yield l.load_item()
+            yield Request(url, callback=self.parse_item_secondhouse
+                          ,meta={"district":district,"subdistrict":subdistrict})
 
     def parse_item_secondhouse(self, response):
+        district = response.meta.get("district")
+        subdistrict = response.meta.get("subdistrict")
         for div in response.xpath('//dl[contains(@id,"list")]'):
             url = urljoin(response.url,urlparse(div.xpath("(.//a)[1]//@href").extract_first()).path)
-            yield Request(url, callback= self.scrape_content_secondhouse)
+            yield Request(url, callback= self.scrape_content_secondhouse
+                          ,meta={"district":district,"subdistrict":subdistrict,
+                                 "source_url":response.url})
+            self.update_index_page(response)
 
+    def update_index_page(self,response):
         self.logger.critical("update <%s> in index page", response.url)
         self.cursor.execute("update index_pages set retrived = ? where url = ?", [1, response.url])
+        if self.cursor.rowcount == 0:
+            self.logger.critical("update_index_page url <%s> not found",response.url)
         self.cnx.commit()
 
     def scrape_content_secondhouse(self, response):
@@ -391,11 +329,100 @@ class FangSpider(scrapy.Spider):
         l.add_value("subdistrict", response.meta.get("subdistrict"))
         l.add_value("url",response.url)
 
-        l.add_value("source", response.request.url)
+        l.add_value("source", response.meta.get("source_url"))
         l.add_value("project", self.settings.get("BOT_NAME"))
         l.add_value("spider", self.name)
         l.add_value("server", socket.gethostname())
         l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
         yield l.load_item()
+
+    def get_subdist_urls_newhouse(self, response):
+        subdist_urls = response.xpath('(//li[@id=""])[1]/a')
+        district = response.meta.get("district")
+        for subdist_url in subdist_urls:
+            subdistrict = subdist_url.xpath('./text()').extract_first()
+            url =  response.urljoin(urlparse(subdist_url.xpath('./@href').extract_first()).path)
+            l = ItemLoader(item=DistrictItem())
+            l.default_output_processor = TakeFirst()
+            l.add_value("url", url)
+            l.add_value("district", district)
+            l.add_value("subdistrict", subdistrict)
+
+            l.add_value("source", response.request.url)
+            l.add_value("project", self.settings.get("BOT_NAME"))
+            l.add_value("spider", self.name)
+            l.add_value("server", socket.gethostname())
+            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+            yield l.load_item()
+            yield Request(url, callback=self.parse_index_newhouse, meta=
+                {"district":district,"subdistrict": subdistrict})
+
+    def parse_index_newhouse(self, response):
+        district = response.meta.get("district")
+        subdistrict = response.meta.get("subdistrict")
+        self.logger.info("starting parse new house: %s", response.url)
+        last_page = urlparse(response.xpath('//a[text()="尾页"]/@href').extract_first()).path
+        if last_page:
+            self.logger.info('-' * 12 + str(self.page_num_reg.findall(last_page)[0][1]) + '-' * 12)
+            last_page_num = int(self.page_num_reg.findall(last_page)[0][1])
+            for i in range(1, last_page_num + 1):
+                l = ItemLoader(item=IndexItem())
+                l.default_output_processor = TakeFirst()
+                url = response.urljoin(self.page_num_reg.sub(r'\g<1>%s/' % i, last_page))
+                l.add_value("url", url)
+                l.add_value("retrived", 0)
+
+                l.add_value("source", response.request.url)
+                l.add_value("project", self.settings.get("BOT_NAME"))
+                l.add_value("spider", self.name)
+                l.add_value("server", socket.gethostname())
+                l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+                yield l.load_item()
+                yield Request(url, callback=self.parse_item_newhouse,
+                              meta={"district":district,"subdistrict":subdistrict})
+        else:
+            l = ItemLoader(item=IndexItem())
+            l.default_output_processor = TakeFirst()
+            url = response.urljoin(response.url)
+            l.add_value("url", response.urljoin(response.url))
+            l.add_value("retrived", 0)
+
+            l.add_value("source", response.request.url)
+            l.add_value("project", self.settings.get("BOT_NAME"))
+            l.add_value("spider", self.name)
+            l.add_value("server", socket.gethostname())
+            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+            yield l.load_item()
+            yield Request(url, callback=self.parse_item_newhouse,
+                          meta={"district": district, "subdistrict": subdistrict})
+
+        self.update_index_page(response)
+
+    def parse_item_newhouse(self, response):
+        print("parse new house <%s>" %response.url)
+        for div in response.xpath('//div[@id="newhouse_loupai_list"]//div[@class="clearfix"]'):
+            l = ItemLoader(item=ScrapeItem(), selector=div)
+            l.default_output_processor=TakeFirst()
+            url = urljoin(response.url,urlparse(div.xpath('(.//a)[1]/@href').extract()).path)
+            l.add_xpath("title", '(.//a)[2]//text()',
+                        MapCompose(lambda x: self.spc_reg.sub("", x)), Join())
+            l.add_xpath("price", './/div[@class="nhouse_price"]//text()',
+                        MapCompose(lambda x: self.spc_reg.sub("",x)),Join())
+            l.add_xpath("address",'.//div[@class="address"]//text()',
+                        MapCompose(lambda x: self.spc_reg.sub("", x)), Join("-"))
+            l.add_value("district", response.meta.get("district"))
+            l.add_value("subdistrict", response.meta.get("subdistrict"))
+            l.add_value("url", url)
+
+            l.add_value("source", response.url)
+            l.add_value("project", self.settings.get("BOT_NAME"))
+            l.add_value("spider", self.name)
+            l.add_value("server", socket.gethostname())
+            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+            yield l.load_item()
 

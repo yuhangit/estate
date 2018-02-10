@@ -24,7 +24,7 @@ class HouseKeepingItem(scrapy.Item):
     server = Field()
 
 
-class DistinctItem(HouseKeepingItem):
+class DistrictItem(HouseKeepingItem):
     district = Field()
     subdistrict = Field()
     url = Field()
