@@ -11,7 +11,7 @@ import sqlite3
 import re
 import socket
 import datetime
-from urllib.request import urljoin, urlparse
+from urlparse import urljoin, urlparse
 import random
 import time
 import logging
