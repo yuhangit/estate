@@ -95,12 +95,12 @@ class HTTPProxyMiddleware(object):
         # self.end_page += 10
 
     def process_request(self, request, spider):
-        if time.time() - self.time > 600 and time.time() - self.time > 5: # api restrict
-            self.loger.info("add new proxies")
-            self.time = time.time()
-            self.proxies.clear()
-            self.query_proxies()
-            self.loger.info("%d proxies now " %len(self.proxies))
+        # if time.time() - self.time > 600 and time.time() - self.time > 5: # api restrict
+        #     self.loger.info("add new proxies")
+        #     self.time = time.time()
+        #     self.proxies.clear()
+        #     self.query_proxies()
+        #     self.loger.info("%d proxies now " %len(self.proxies))
 
         if "proxy" in request.meta:
             self.loger.critical("request <%s> has proxy already, remove it", request.url)
@@ -127,7 +127,7 @@ class HTTPProxyMiddleware(object):
                     proxies_num = len(self.proxies)
                     self.loger.info(
                         'Removed failed proxy <%s>, %d proxies left', failed_proxy, proxies_num)
-                    if proxies_num < 100:
+                    if proxies_num < 50:
                         self.query_proxies()
                     return True
                 i += 1

@@ -46,3 +46,15 @@ class ScrapeItem(HouseKeepingItem):
 class IndexItem(HouseKeepingItem):
     url = Field()
     retrived = Field()
+
+
+class AgentItem(HouseKeepingItem):
+    name = Field()
+    district = Field()
+    subdistrict = Field()
+    telephone = Field()
+    history_amount = Field()
+    recent_activation = Field()
+    second_house_amount = Field()
+    new_house_amount = Field()
+    rent_house_amount = Field()

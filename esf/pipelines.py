@@ -7,8 +7,7 @@
 import sqlite3
 from scrapy.utils.project import get_project_settings as settings
 import logging
-from esf.items import IndexItem,ScrapeItem,DistrictItem
-
+from esf.items import IndexItem,ScrapeItem,DistrictItem, AgentItem
 
 class SqlitePipeline(object):
     collection_name = "scrapy_items"
@@ -43,6 +42,17 @@ class SqlitePipeline(object):
             self.cursor.execute(stmt, (item.get("district"), item.get("subdistrict"), item.get("url")
                                        ,item.get("source"),item.get("project"), item.get("server"), item.get("date")
                                        ,item.get("spider")))
+
+        elif isinstance(item, AgentItem):
+            stmt = """insert into agencies(name, district,subdistrict, telephone, history_amount,recent_activation
+                          ,new_house_amount,second_house_amount,rent_house_amount,source, project, server, dt, spider)
+                      values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """
+            self.cursor.execute(stmt,(item.get("name"),item.get("district"),item.get("subdistrict"),item.get("telephone"),
+                                      item.get("history_amount"),item.get("recent_activation"),
+                                      item.get("new_house_amount"), item.get("second_house_amount"),item.get("rent_house_amount"),
+                                      item.get("source"),item.get("project"), item.get("server"), item.get("date"),item.get("spider")))
+
         self.cnx.commit()
         return item
 
