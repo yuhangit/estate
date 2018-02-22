@@ -44,11 +44,11 @@ class SqlitePipeline(object):
                                        ,item.get("spider")))
 
         elif isinstance(item, AgentItem):
-            stmt = """insert into agencies(name, district,subdistrict, telephone, history_amount,recent_activation
+            stmt = """insert into agencies(name,company, district,subdistrict, telephone, history_amount,recent_activation
                           ,new_house_amount,second_house_amount,rent_house_amount,source, project, server, dt, spider)
-                      values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                      values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """
-            self.cursor.execute(stmt,(item.get("name"),item.get("district"),item.get("subdistrict"),item.get("telephone"),
+            self.cursor.execute(stmt,(item.get("name"),item.get("company"), item.get("district"),item.get("subdistrict"),item.get("telephone"),
                                       item.get("history_amount"),item.get("recent_activation"),
                                       item.get("new_house_amount"), item.get("second_house_amount"),item.get("rent_house_amount"),
                                       item.get("source"),item.get("project"), item.get("server"), item.get("date"),item.get("spider")))

@@ -58,3 +58,4 @@ class AgentItem(HouseKeepingItem):
     second_house_amount = Field()
     new_house_amount = Field()
     rent_house_amount = Field()
+    company = Field()
