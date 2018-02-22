@@ -98,3 +98,22 @@ class DistrictspiderSpider(scrapy.Spider):
             l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
             yield l.load_item()
+
+        subdistricts = response.xpath('//label[contains(@for,"q") and not(@for="q")]')
+        for subdistrict in subdistricts:
+            subdistrict = subdistrict.xpath("./text()").extract_first().strip()
+            url = base_url + urlencode({"q": subdistrict}, encoding="gbk")
+
+            l = ItemLoader(item=DistrictItem(), selector=url)
+            l.default_output_processor = TakeFirst()
+            l.add_value("district", district)
+            l.add_value("subdistrict", subdistrict)
+            l.add_value("url", url)
+
+            l.add_value("source", response.request.url)
+            l.add_value("project", self.settings.get("BOT_NAME"))
+            l.add_value("spider", self.name)
+            l.add_value("server", socket.gethostname())
+            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+            yield l.load_item()
