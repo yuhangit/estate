@@ -8,11 +8,8 @@ import socket, datetime
 from urllib.parse import urlencode
 
 
-<<<<<<< HEAD
-class DistrictspiderSpider(scrapy.Spider):
-=======
 class DistrictSpider(scrapy.Spider):
->>>>>>> f60d4da0ad17581f1f4c9674c78f80748a0bb331
+
     name = 'DistrictSpider'
     allowed_domains = ['centanet.com', 'fang.com', 'ganji.com', '58.com','ks.js.cn',
                        'fangdd.com','qfang.com','163.com','anjuke.com','lianjia.com',
