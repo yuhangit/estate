@@ -53,7 +53,7 @@ class DistrictSpider(scrapy.Spider):
             district_urls = response.xpath('(//*[text()="全部"])[1]//ancestor::ul[1]//a[not(.//text()="全部")]')
         for url in district_urls:
             district_url = response.urljoin(url.xpath('./@href').extract_first())
-            district_name = url.xpath('./text()').extract_first().strip()
+            district_name = "".join(url.xpath('.//text()').extract()).strip()
 
             yield Request(url=district_url, callback=self.parse_subdistrict, meta={"district_name":district_name})
 
@@ -78,14 +78,16 @@ class DistrictSpider(scrapy.Spider):
             self.logger.info("fangdd subdistrict ...")
             subdistrict_urls = response.xpath('(//*[text()="不限"])[2]//ancestor::ul//a[not(text()="不限")]')
 
-        # anjuke
-        if not subdistrict_urls:
-            self.logger.info("anjuke subdistrict ...")
-            subdistrict_urls = response.xpath('(//*[text()="全部"])[2]//..//a[not(text()="全部")]')
         # 5a5j
         if not subdistrict_urls:
             self.logger.info("5a5j subdistrict ...")
             subdistrict_urls = response.xpath('//dd[@class="block"]//a')
+
+        # anjuke
+        if not subdistrict_urls:
+            self.logger.info("anjuke subdistrict ...")
+            subdistrict_urls = response.xpath('(//*[text()="全部"])[2]//ancestor::div[@class="sub-items"]//a[not(text()="全部")]')
+
         # lianjia
         if not subdistrict_urls:
             self.logger.info("lianjia subdistrict ...")
