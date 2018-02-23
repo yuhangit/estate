@@ -16,12 +16,11 @@ class SqlitePipeline(object):
         self.logger.info("start pipelien %s process spider %s" %(self.collection_name, spider.name))
         if isinstance(item, IndexItem):
             stmt = '''
-                insert into index_pages(url, retrived, source, project, server, dt, spider) VALUES 
-                (?,?,?,?,?,?,?)
+                insert into index_pages(url, retrived, category,source, project, server, dt, spider) VALUES 
+                (?,?,?,?,?,?,?,?)
             '''
-            self.cursor.execute(stmt,(item.get("url"),item.get("retrived"),item.get("source"),
-                                      item.get("project"),item.get("server"),item.get("date")
-                                      ,item.get("spider")))
+            self.cursor.execute(stmt,(item.get("url"),item.get("retrived"),item.get("category"),item.get("source"),
+                                      item.get("project"),item.get("server"),item.get("date"),item.get("spider")))
 
         elif isinstance(item, ScrapeItem):
 
@@ -36,19 +35,20 @@ class SqlitePipeline(object):
                                       item.get("agent_name"),item.get("agent_company"),item.get("agent_phone")))
 
         elif isinstance(item, DistrictItem):
-            stmt = """insert into district (district, subdistrict, url,source, project, server, dt, spider)
-                        VALUES (?,?,?,?,?,?,?,?)
+            stmt = """insert into district (district, subdistrict, url,category,source, project, server, dt, spider)
+                        VALUES (?,?,?,?,?,?,?,?,?)
             """
-            self.cursor.execute(stmt, (item.get("district"), item.get("subdistrict"), item.get("url")
+            self.cursor.execute(stmt, (item.get("district"), item.get("subdistrict"), item.get("url"),item.get("category")
                                        ,item.get("source"),item.get("project"), item.get("server"), item.get("date")
                                        ,item.get("spider")))
 
         elif isinstance(item, AgentItem):
-            stmt = """insert into agencies(name,company, district,subdistrict, telephone, history_amount,recent_activation
+            stmt = """insert into agencies(name,company,address, district,subdistrict, telephone, history_amount,recent_activation
                           ,new_house_amount,second_house_amount,rent_house_amount,source, project, server, dt, spider)
-                      values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                      values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """
-            self.cursor.execute(stmt,(item.get("name"),item.get("company"), item.get("district"),item.get("subdistrict"),item.get("telephone"),
+            self.cursor.execute(stmt,(item.get("name"),item.get("company"),item.get("address") ,item.get("district")
+                                      ,item.get("subdistrict"),item.get("telephone"),
                                       item.get("history_amount"),item.get("recent_activation"),
                                       item.get("new_house_amount"), item.get("second_house_amount"),item.get("rent_house_amount"),
                                       item.get("source"),item.get("project"), item.get("server"), item.get("date"),item.get("spider")))

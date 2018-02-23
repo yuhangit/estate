@@ -4,8 +4,10 @@ from scrapy.http import Request
 from esf.items import DistrictItem
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst
+from scrapy.utils.project import get_project_settings
 import socket, datetime
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
+import sqlite3
 
 
 class DistrictSpider(scrapy.Spider):
@@ -28,12 +30,32 @@ class DistrictSpider(scrapy.Spider):
                   'https://sh.5i5j.com/jingjiren/n0/'
                   ]
 
+    def __init__(self,*args,**kwargs):
+        super(DistrictSpider,self).__init__()
+        # 如何setting 中定义refresh则重新刷新部分页面
+        if get_project_settings().get("REFRESH_URLS"):
+            self.logger.critical("refresh partial urls")
+            self.start_urls = self.fresh_urls()
+
+    def fresh_urls(self):
+        with sqlite3.connect("data/esf_urls_test.db") as cnx:
+            cursor = cnx.cursor()
+            cursor.execute("select DISTINCT source from district where subdistrict = 'nodef'")
+            urls = cursor.fetchall()
+            cursor.executemany("DELETE from district where source = ?",urls)
+            return [r[0] for r in urls]
+
     def parse(self, response):
+        """
+        在添加新的response时, 要依次测试每个xpath, xpath排列规则, 专有的站上面,
+        普适在下面, 否则可能拿到错误的信息.
+        :param response:
+        :return:
+        """
         # process kunshan
         if response.url.find("house.ks.js.cn") > 0:
             for item in self.parse_kunshan(response):
                 yield item
-
 
         district_urls = response.xpath('(//*[text()="不限"])[1]//..//a[not(text()="不限")]')
         # ganji
@@ -52,13 +74,22 @@ class DistrictSpider(scrapy.Spider):
         if not district_urls:
             self.logger.info("5a5j district ...")
             district_urls = response.xpath('(//*[text()="全部"])[1]//ancestor::ul[1]//a[not(.//text()="全部")]')
+
+        category = self.get_category(response.url)
         for url in district_urls:
-            district_url = response.urljoin(url.xpath('./@href').extract_first())
+            district_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
             district_name = "".join(url.xpath('.//text()').extract()).strip()
 
-            yield Request(url=district_url, callback=self.parse_subdistrict, meta={"district_name":district_name})
+            yield Request(url=district_url, callback=self.parse_subdistrict,
+                          meta={"district_name": district_name, "category": category})
 
     def parse_subdistrict(self, response):
+        """
+        在添加新的response时, 要依次测试每个xpath, xpath排列规则, 专有的站上面,
+        普适在下面, 否则可能拿到错误的信息.
+        :param response:
+        :return:
+        """
         subdistrict_urls = response.xpath('(//*[text()="不限"])[2]//ancestor::p//a[not(text()="不限")]')
         # newhouse.centanet.com
         if not subdistrict_urls:
@@ -93,15 +124,20 @@ class DistrictSpider(scrapy.Spider):
         if not subdistrict_urls:
             self.logger.info("lianjia subdistrict ...")
             subdistrict_urls = response.xpath('(//*[text()="不限"])[2]//ancestor::div[@class="option-list sub-option-list"]//a[not(text()="不限")]')
+
         district = response.meta.get("district_name")
+        category = response.meta.get("category")
+
         # ！！ if no subdistrict exists, add nodef into subdistrict
         if not subdistrict_urls:
             self.logger.critical("!!!!  not subdistrict found , make sure this  !!!!")
+            self.logger.critical("url: %s", response.url)
             l = ItemLoader(item=DistrictItem())
             l.default_output_processor = TakeFirst()
             l.add_value("district", district)
             l.add_value("subdistrict", "nodef")
             l.add_value("url", response.url)
+            l.add_value("category", category)
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -120,6 +156,7 @@ class DistrictSpider(scrapy.Spider):
             l.add_value("district", district)
             l.add_value("subdistrict", subdistrict)
             l.add_value("url", subdistrict_url)
+            l.add_value("category", category)
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -129,11 +166,13 @@ class DistrictSpider(scrapy.Spider):
 
             yield l.load_item()
 
-
+    # 昆山二手房网站架构老旧, 单独处理
     def parse_kunshan(self, response):
         district = "昆山"
         subdistricts = response.xpath('//option[not(text()="选择乡镇")]')
         base_url = 'http://house.ks.js.cn/secondhand.asp?'
+
+        category = self.get_category(response.url)
         self.logger.info("process kunshan")
         for subdistrict in subdistricts:
             subdistrict = subdistrict.xpath("./@value").extract_first().strip()
@@ -144,6 +183,7 @@ class DistrictSpider(scrapy.Spider):
             l.add_value("district", district)
             l.add_value("subdistrict", subdistrict)
             l.add_value("url", url)
+            l.add_value("category", category)
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -171,3 +211,13 @@ class DistrictSpider(scrapy.Spider):
             l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
             yield l.load_item()
+
+    #  获取每个主站的类别
+    def get_category(self,url):
+        categories = get_project_settings().get("CATEGORIES")
+        category = ""
+        for k, v in categories.items():
+            if url in v:
+                category = k
+                return category
+        return category

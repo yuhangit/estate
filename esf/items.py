@@ -22,13 +22,14 @@ class HouseKeepingItem(scrapy.Item):
     spider = Field()
     project = Field()
     server = Field()
+    category = Field()
 
 
 class DistrictItem(HouseKeepingItem):
     district = Field()
     subdistrict = Field()
     url = Field()
-    source = Field()
+
 
 
 class ScrapeItem(HouseKeepingItem):
@@ -59,3 +60,4 @@ class AgentItem(HouseKeepingItem):
     new_house_amount = Field()
     rent_house_amount = Field()
     company = Field()
+    address = Field()

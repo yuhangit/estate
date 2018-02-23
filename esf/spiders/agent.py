@@ -9,8 +9,8 @@ import socket
 import datetime
 import sqlite3
 
-class AgentSpider(scrapy.Spider):
 
+class AgentSpider(scrapy.Spider):
     @staticmethod
     def get_scraped_urls():
         with sqlite3.connect("data/esf_urls_test.db") as cnx:
