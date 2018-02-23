@@ -7,6 +7,7 @@ from scrapy.loader.processors import TakeFirst
 import socket, datetime
 from urllib.parse import urlencode
 
+
 class DistrictspiderSpider(scrapy.Spider):
     name = 'DistrictSpider'
     # allowed_domains = ['centanet.com', 'fang.com', 'ganji.com', '58.com']

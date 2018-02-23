@@ -53,7 +53,7 @@ class AgentSpider(scrapy.Spider):
 
     start_urls = total_urls
 
-    allowed_domains = ["lianjia.com","anjuke.com","qfang.com","centanet.com","ganji.com","fang.com"]
+    allowed_domains = ["lianjia.com", "anjuke.com", "qfang.com", "centanet.com", "ganji.com", "fang.com"]
 
     # used for CrawlSpider
     rules = (
