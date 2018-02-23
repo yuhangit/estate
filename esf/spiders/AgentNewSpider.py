@@ -202,7 +202,11 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
 
         for url_info in url_infos:
             meta = {"district":url_info[0],"subdistrict":url_info[1]}
-            yield Request(url=url_info[2],meta=meta, callback=self.parse_indexpage)
+            yield Request(url=url_info[2],meta=meta)
+
+    def parse_start_url(self, response):
+        for item in self.parse_indexpage(response):
+            yield item
 
     def parse_indexpage(self,response):
         self.logger.info("process url: <%s>", response.url)
@@ -397,3 +401,25 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
             yield l.load_item()
+
+
+class TestCrawlSpider(scrapy.spiders.CrawlSpider):
+    name = "TestCrawlSpider"
+    xpaths = ['//a[text()="下一页"]','//div[@class="page-box house-lst-page-box"]//a']  # 5i5j, fang
+
+    rules = (
+        # ganji
+        Rule(LinkExtractor(restrict_xpaths=xpaths),
+             callback='parse_indexpage', follow=True),
+    )
+
+    def start_requests(self):
+      yield Request(url = 'https://sh.5i5j.com/jingjiren/caoyang/')
+
+    def parse_start_url(self, response):
+        for item in self.parse_indexpage(response):
+            yield item
+
+    def parse_indexpage(self, response):
+        for i in range(2):
+            yield  i
