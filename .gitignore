@@ -108,3 +108,6 @@ data/
 
 # test python script
 #test/
+
+#setting
+esf/settings.py
