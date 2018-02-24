@@ -181,11 +181,11 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
     name = "AgencyIndexPageSpider"
 
     xpaths = ['//span[text()="下一页 >"]//ancestor::a[1]', # ganji
-                "//a[text()=">"]",                              # centanet
-                 '//a[text()="下一页"]',                        # 5i5j, fang
-                '//div[@class="page-box house-lst-page-box"]//a', # lianjia
-                '//a[text()="下一页 >"]',                         # anjuke
-                '//span[text()="下一页"]//ancestor::a[1]' # qfang
+              '//a[text()=">"]',                              # centanet
+              '//a[text()="下一页"]',                        # 5i5j, fang
+              # '//div[@class="page-box house-lst-page-box"]//a', # lianjia
+              '//a[text()="下一页 >"]',                         # anjuke
+              '//span[text()="下一页"]//ancestor::a[1]'      # qfang
               ]
     rules = (
         # ganji
@@ -205,26 +205,57 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             yield Request(url=url_info[2],meta=meta)
 
     def parse_start_url(self, response):
-        for item in self.parse_indexpage(response):
-            yield item
+
+        # 链家页面页码由 js生成
+        if '.lianjia.com' in response.url:
+            r = re.compile('{page}')
+            page_num = response.xpath('//div[@class="page-box house-lst-page-box"]/@page'
+                                          '-data').re_first(r":(\d+),")
+            base_path = response.xpath('//div[@class="page-box house-lst-page-box"]/@page-url').extract_first()
+
+            # 若该url没有页码标记,直接解析
+            if page_num:
+                for i in range(1,int(page_num)+1):
+                    url_path = response.urljoin(r.sub("%i" %i, base_path))
+                    yield Request(url=url_path, callback=self.parse_indexpage)
+            else:
+                for item in self.parse_indexpage(response):
+                    yield item
+        # 利用Rules 爬取5i5j后续页面缓慢
+        elif '.5i5j.com' in response.url:
+            r = re.compile('\\d+$')
+            page_num = response.xpath('//div[@class="pageSty rf"]//a//text()').re(r'(\d+)')
+            base_path = response.xpath('//div[@class="pageSty rf"]//a[not(@class="cur")]//@href').extract_first()
+            if page_num:
+                for i in range(1,max(map(int,page_num))+1):
+                    url_path = response.urljoin(r.sub("%i/" %i,base_path))
+                    self.logger.critical("url: %s",url_path)
+                    yield Request(url=url_path, callback=self.parse_indexpage)
+
+            else:
+                for item in self.parse_indexpage(response):
+                    yield item
+        else:
+            for item in self.parse_indexpage(response):
+                yield item
 
     def parse_indexpage(self,response):
         self.logger.info("process url: <%s>", response.url)
         items = []
 
-        if ".lianjia.com" in response.url:
+        if ".lianjia.com" in response.url:#
             items = self.parse_lianjia(response)
-        elif ".anjuke.com" in response.url:
+        elif ".anjuke.com" in response.url:#
             items = self.parse_anjuke(response)
-        elif ".qfang.com" in response.url:
+        elif ".qfang.com" in response.url:#
             items = self.parse_qfang(response)
-        elif ".centanet.com" in response.url:
+        elif ".centanet.com" in response.url:#
             items = self.parse_centanet(response)
-        elif ".ganji.com" in response.url:
-            items = self.parse_fang(response)
-        elif ".fang.com" in response.url:
+        elif ".ganji.com" in response.url:#
             items = self.parse_ganji(response)
-        elif ".5i5j.com" in response.url:
+        elif ".fang.com" in response.url:#
+            items = self.parse_fang(response)
+        elif ".5i5j.com" in response.url: #
             items = self.parse_5i5j(response)
         else:
             self.logger.critical("not parse find")
@@ -309,8 +340,10 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.default_output_processor = TakeFirst()
             l.add_xpath("name", './/p[@class="phone"]/b/@zvalue',
                         re=r"cnName:'(\w+)'")
-            l.add_xpath("district",'.//h2//@title')
-            l.add_xpath("subdistrict", './/p[@class="xi"]//@title',
+            l.add_xpath("district", '(//span[@class="curr"])[1]/text()')
+            l.add_xpath("subdistrict", '(//span[@class="curr"])[2]/text()')
+            l.add_xpath("company",'.//h2//@title')
+            l.add_xpath("address", './/p[@class="xi"]//@title',
                         Join('-'))
             l.add_xpath("telephone",'.//p[@class="phone"]/b/@zvalue'
                         ,re = r"mobile:'(\w+)'")
@@ -334,10 +367,11 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l = ItemLoader(item=AgentItem(), selector=div)
             l.default_output_processor = TakeFirst()
             l.add_xpath("name", './/a[@class="broker-name"]/text()')
-            l.add_xpath("district", './/span[@class="bi-text"]/a[1]/text()')
-            l.add_xpath("subdistrict", './/span[@class="bi-text"]/a[2]/text()')
+            l.add_xpath("address", './/span[@class="bi-text broker-xiaoqu"]//text()'
+                        ,Join())
             l.add_xpath("telephone", './/p[@class="tel"]/text()', MapCompose(lambda x: int(x)))
-
+            l.add_xpath("district", '//ul[@class="f-clear"]/li[@class="item current"]')
+            l.add_xpath("subdistrict",'//a[@class="subway-item current"]')
             # housekeeping
             l.add_value("source", response.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -354,13 +388,12 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l = ItemLoader(item=AgentItem(), selector=li)
             l.default_output_processor = TakeFirst()
             l.add_xpath("name", './/div[@class="ttop"]//a//text()')
-            l.add_xpath("district", './/span[@class="diqu"]/span[1]/text()')
-            l.add_xpath("subdistrict", './/span[@class="diqu"]/span[2]/text()')
             l.add_xpath("telephone", './/div[@class="fl"]/p[1]/text()',
                         MapCompose(lambda x: int(x)), re=r"\d+")
             l.add_xpath("company", '//li[@link]//p[@class="f14 liaxni"]/span[2]/text()',Join(','),
                         re=r"\w+")
-
+            l.add_xpath("district",'(//a[@class="orange"])[1]//text()')
+            l.add_xpath("subdistrict",'(//a[@class="orange"])[2]//text()')
             # housekeeping
             l.add_value("source", response.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -405,7 +438,8 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
 
 class TestCrawlSpider(scrapy.spiders.CrawlSpider):
     name = "TestCrawlSpider"
-    xpaths = ['//a[text()="下一页"]','//div[@class="page-box house-lst-page-box"]//a']  # 5i5j, fang
+    xpaths = '//a[text()="下一页"]'  # 5i5j, fang
+
 
     rules = (
         # ganji
@@ -414,12 +448,35 @@ class TestCrawlSpider(scrapy.spiders.CrawlSpider):
     )
 
     def start_requests(self):
-      yield Request(url = 'https://sh.5i5j.com/jingjiren/caoyang/')
+      yield Request(url = 'https://sh.5i5j.com/jingjiren/xinzhuang/')
 
     def parse_start_url(self, response):
-        for item in self.parse_indexpage(response):
-            yield item
+
+        if '.lianjia.com' in response.url:
+            r = re.compile('{page}')
+            page_num = int(response.xpath('//div[@class="page-box house-lst-page-box"]/@page'
+                                          '-data').re_first(r":(\d+),"))
+            base_path = response.xpath('//div[@class="page-box house-lst-page-box"]/@page-url').extract_first()
+            for i in range(1,page_num+1):
+                url_path = response.urljoin(r.sub("%i" %i, base_path))
+                yield Request(url=url_path, callback=self.parse_indexpage)
+        elif '.5i5j.com' in response.url:
+            r = re.compile('\\d+$')
+            page_num = response.xpath('//div[@class="pageSty rf"]//a//text()').re(r'(\d+)')
+            base_path = response.xpath('//div[@class="pageSty rf"]//a[not(@class="cur")]//@href').extract_first()
+            if page_num:
+                for i in range(1,max(map(int,page_num))+1):
+                    url_path = response.urljoin(r.sub("%i/" %i,base_path))
+                    self.logger.critical("url: %s",url_path)
+                    yield Request(url=url_path, callback=self.parse_indexpage)
+
+            else:
+                for item in self.parse_indexpage(response):
+                    yield item
+
+        else:
+            for item in self.parse_indexpage(response):
+                yield item
 
     def parse_indexpage(self, response):
-        for i in range(2):
-            yield  i
+        yield {"url":response.url}

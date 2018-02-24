@@ -102,6 +102,11 @@ class HTTPProxyMiddleware(object):
         #     self.query_proxies()
         #     self.loger.info("%d proxies now " %len(self.proxies))
 
+        # remove refer in headers
+        # if "Referer" in request.headers:
+        #     request.headers.pop("Referer")
+        # self.loger.critical("request <%s> headers %s",request.url,request.headers)
+
         if "proxy" in request.meta:
             self.loger.critical("request <%s> has proxy already, remove it", request.url)
             self.remove_failed_proxy(request,spider)
