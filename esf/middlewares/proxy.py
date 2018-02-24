@@ -8,6 +8,7 @@ from stem import Signal
 from stem.control import Controller
 
 from scrapy.utils.project import get_project_settings
+from scrapy.http import Request
 from  twisted.internet.error import TimeoutError
 
 
@@ -106,6 +107,14 @@ class HTTPProxyMiddleware(object):
         # if "Referer" in request.headers:
         #     request.headers.pop("Referer")
         # self.loger.critical("request <%s> headers %s",request.url,request.headers)
+
+        # fix broken url:
+        # 关闭了301 redirect, 5i5j 需要手动添加 /
+        if '.5i5j.com' in request.url and not request.url.endswith('/'):
+            self.loger.info("request url <%s> not endswith '/'", request.url)
+            request = request.replace(url=request.url + "/")
+            # reprocess the request
+            return request
 
         if "proxy" in request.meta:
             self.loger.critical("request <%s> has proxy already, remove it", request.url)

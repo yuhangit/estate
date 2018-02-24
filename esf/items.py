@@ -61,3 +61,4 @@ class AgentItem(HouseKeepingItem):
     rent_house_amount = Field()
     company = Field()
     address = Field()
+    register_date = Field()

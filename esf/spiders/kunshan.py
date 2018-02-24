@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from esf.items import ScrapeItem,IndexItem
+from esf.items import ScrapeItem,IndexItem,AgentItem
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose,Join,TakeFirst
 from scrapy.linkextractors import LinkExtractor
@@ -20,46 +20,85 @@ import requests
 
 
 
-class KunshanAllScrapeScripe(scrapy.Spider):
-    start_urls = [ 'http://house.ks.js.cn/secondhand.asp?page=%s&wn=&g=&w=&s=0&j=&x=&q=&l=&regid='
-                   %i for i in range(1,2963)]
+class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
+    start_urls = [ 'http://house.ks.js.cn/secondhand.asp']
     name = 'KunShanAllScrapeSpider'
     spc_reg = re.compile(r"\s+")
 
-    def parse(self, response):
-        self.logger.info("start parese url %s" %response.url)
-        for div in response.xpath('//ul[@id="xylist"]/li[@class="listzwt"]'):
-            l = ItemLoader(item=ScrapeItem(), selector=div)
-            l.default_output_processor = TakeFirst()
-            l.add_xpath("title",'./div[@class="xlist_1"]/a/text()', MapCompose(lambda x: self.spc_reg.sub("",x)), Join())
-            l.add_xpath("url",'./div[@class="xlist_1"]/a/@href',
-                        MapCompose(lambda x: urljoin(response.url, x )))
-            l.add_xpath("price", '(./div[@class="xlist_3"])[3]/text()')
-            l.add_xpath("address",'./div[@class="xlist_1"]/a/text()',
-                        MapCompose(lambda x: self.spc_reg.sub("", x)),Join())
+    rules = (Rule( LinkExtractor(restrict_xpaths='//div[@class="page"]')),
+             Rule(LinkExtractor(restrict_xpaths='//ul[@id="xylist"]/li//a'), callback="parse_item")
+             )
 
-            l.add_value("district", "昆山")
+    def parse_item(self,response):
+        l = ItemLoader(item=AgentItem(), response=response)
+        l.default_output_processor = TakeFirst()
+        l.add_xpath("name", '//div[@class="sthys3"]/text()', re=r"：(\w+)")
+        l.add_xpath("telephone", '//div[@class="sttelct2 sttelct"]/text()',
+                    MapCompose(lambda x: "".join(x.split())))
+        l.add_xpath("company", '//li[@class="st14 stb starial"]//text()')
+        l.add_xpath("address", '//div[@class="xflilist"]/div[3]//text()',
+                    re = r'：(\w+)')
+        l.add_xpath("register_date", '//div[@class="jbfx"]/text()', re=r'登记日期：([\d/]+)')
+        l.add_value("district", "昆山")
+        l.add_xpath("subdistrict",'(//div[@class="xx_xq_l200"])[2]/text()', re='区域：(\\w+)')
 
-            l.add_xpath("subdistrict",'./div[@class="xlist_2"]/text()')
-
-            # housekeeping
-            l.add_value("source", response.url)
-            l.add_value("project", self.settings.get("BOT_NAME"))
-            l.add_value("spider", self.name)
-            l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
-
-            yield l.load_item()
+        # housekeeping
+        l.add_value("source", response.url)
+        l.add_value("project", self.settings.get("BOT_NAME"))
+        l.add_value("spider", self.name)
+        l.add_value("server", socket.gethostname())
+        l.add_value("date", datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+        yield l.load_item()
 
     def start_requests(self):
-        self.cnx = sqlite3.connect(get_project_settings().get("STORE_DATABASE"))
-        self.cursor = self.cnx.cursor()
-        self.cursor.execute("SELECT DISTINCT url from properties where spider = '%s'" %self.name)
-        fetched_urls = [url[0] for url in self.cursor.fetchall()]
-        for url in self.start_urls:
-            if url not in fetched_urls:
-                yield Request(url)
+        if get_project_settings().get('REFRESH_URLS') != 0:
+            self.logger.critical("refresh urls ....")
+            with sqlite3.connect("data/esf_urls.db") as cnx:
+                cursor = cnx.cursor()
+                cursor.execute("select source from main.agencies where name is null and district ='昆山'")
+                urls = [r[0] for r in cursor.fetchall()]
+                cursor.execute("DELETE from main.agencies where name is null and district ='昆山'")
+                cnx.commit()
+            for url in urls:
+                yield Request(url=url, callback=self.parse_item)
+        else:
+            for url in self.start_urls:
+                yield Request(url=url)
 
-    def __del__(self):
-        self.cursor.close()
-        self.cnx.close()
+    # def parse(self, response):
+    #     self.logger.info("start parese url %s" %response.url)
+    #     for div in response.xpath('//ul[@id="xylist"]/li[@class="listzwt"]'):
+    #         l = ItemLoader(item=ScrapeItem(), selector=div)
+    #         l.default_output_processor = TakeFirst()
+    #         l.add_xpath("title",'./div[@class="xlist_1"]/a/text()', MapCompose(lambda x: self.spc_reg.sub("",x)), Join())
+    #         l.add_xpath("url",'./div[@class="xlist_1"]/a/@href',
+    #                     MapCompose(lambda x: urljoin(response.url, x )))
+    #         l.add_xpath("price", '(./div[@class="xlist_3"])[3]/text()')
+    #         l.add_xpath("address",'./div[@class="xlist_1"]/a/text()',
+    #                     MapCompose(lambda x: self.spc_reg.sub("", x)),Join())
+    #
+    #         l.add_value("district", "昆山")
+    #
+    #         l.add_xpath("subdistrict",'./div[@class="xlist_2"]/text()')
+    #
+    #         # housekeeping
+    #         l.add_value("source", response.url)
+    #         l.add_value("project", self.settings.get("BOT_NAME"))
+    #         l.add_value("spider", self.name)
+    #         l.add_value("server", socket.gethostname())
+    #         l.add_value("date", datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+    #
+    #         yield l.load_item()
+
+    # def start_requests(self):
+    #     self.cnx = sqlite3.connect(get_project_settings().get("STORE_DATABASE"))
+    #     self.cursor = self.cnx.cursor()
+    #     self.cursor.execute("SELECT DISTINCT url from properties where spider = '%s'" %self.name)
+    #     fetched_urls = [url[0] for url in self.cursor.fetchall()]
+    #     for url in self.start_urls:
+    #         if url not in fetched_urls:
+    #             yield Request(url)
+
+    # def __del__(self):
+    #     self.cursor.close()
+    #     self.cnx.close()

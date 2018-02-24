@@ -44,13 +44,14 @@ class SqlitePipeline(object):
 
         elif isinstance(item, AgentItem):
             stmt = """insert into agencies(name,company,address, district,subdistrict, telephone, history_amount,recent_activation
-                          ,new_house_amount,second_house_amount,rent_house_amount,source, project, server, dt, spider)
-                      values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                          ,new_house_amount,second_house_amount,rent_house_amount,register_date,source, project, server, dt, spider)
+                      values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """
             self.cursor.execute(stmt,(item.get("name"),item.get("company"),item.get("address") ,item.get("district")
                                       ,item.get("subdistrict"),item.get("telephone"),
                                       item.get("history_amount"),item.get("recent_activation"),
                                       item.get("new_house_amount"), item.get("second_house_amount"),item.get("rent_house_amount"),
+                                      item.get("register_date"),
                                       item.get("source"),item.get("project"), item.get("server"), item.get("date"),item.get("spider")))
 
         self.cnx.commit()

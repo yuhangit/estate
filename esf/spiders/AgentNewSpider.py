@@ -368,10 +368,11 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.default_output_processor = TakeFirst()
             l.add_xpath("name", './/a[@class="broker-name"]/text()')
             l.add_xpath("address", './/span[@class="bi-text broker-xiaoqu"]//text()'
-                        ,Join())
+                        ,MapCompose(lambda x:x.strip()),Join())
             l.add_xpath("telephone", './/p[@class="tel"]/text()', MapCompose(lambda x: int(x)))
-            l.add_xpath("district", '//ul[@class="f-clear"]/li[@class="item current"]')
-            l.add_xpath("subdistrict",'//a[@class="subway-item current"]')
+            l.add_xpath("district", '//ul[@class="f-clear"]/li[@class="item current"]//text()')
+            l.add_xpath("subdistrict",'//a[@class="subway-item current"]//text()')
+            l.add_xpath("company", '//span[@class="bi-text broker-company"]/text()')
             # housekeeping
             l.add_value("source", response.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -405,7 +406,7 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
 
 
     def parse_5i5j(self,response):
-        self.logger.info("5i5j fang url")
+        self.logger.info("process 5i5j  url")
         divs = response.xpath('//div[@class="list-con-box"]/div')
         for div in divs:
             l = ItemLoader(item=AgentItem(), selector=div)
