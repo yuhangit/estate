@@ -197,7 +197,7 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
     def start_requests(self):
         with sqlite3.connect(get_project_settings().get("STORE_DATABASE")) as cnx:
             cursor = cnx.cursor()
-            cursor.execute("select district,subdistrict,url from main.district where instr(source, '.5i5j.com') > 0")
+            cursor.execute("select district,subdistrict,url from main.district where instr(source, '.fang.com') > 0")
             url_infos = cursor.fetchall()
 
         for url_info in url_infos:
@@ -395,6 +395,8 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
                         re=r"\w+")
             l.add_xpath("district",'(//a[@class="orange"])[1]//text()')
             l.add_xpath("subdistrict",'(//a[@class="orange"])[2]//text()')
+            l.add_xpath("second_house_amount", './/b[@class="ml03"]', re=r"(\d+)套")
+
             # housekeeping
             l.add_value("source", response.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -403,7 +405,6 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
             yield l.load_item()
-
 
     def parse_5i5j(self,response):
         self.logger.info("process 5i5j  url")
