@@ -40,7 +40,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
                     re = r'：(\w+)')
         l.add_xpath("register_date", '//div[@class="jbfx"]/text()', re=r'登记日期：([\d/]+)')
         l.add_value("district", "昆山")
-        l.add_xpath("subdistrict",'(//div[@class="xx_xq_l200"])[2]/text()', re='区域：(\\w+)')
+        l.add_xpath("subdistrict",'(//div[@class="xx_xq_l200"])[2]/text()', re='区域：(\\W)*(昆山)?(\\w+)')[2]
 
         # housekeeping
         l.add_value("source", response.url)
