@@ -26,13 +26,14 @@ class SqlitePipeline(object):
 
             stmt = '''insert into properties(title, url, price, address, district,
                         subdistrict, dt, source, project, server,spider,agent_name,
-                        agent_company,agent_phone) 
-                      values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                        agent_company,agent_phone,source_name,category, recent_activation) 
+                      values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
             self.cursor.execute(stmt,(item.get("title"),item.get("url"),item.get("price"),
                                       item.get("address"),item.get("district"),item.get("subdistrict")
-                                      ,item.get("date"),item.get("source"),item.get("project")
+                                      ,item.get("date"),item.get("source"), item.get("project")
                                       ,item.get("server"),item.get("spider"),
-                                      item.get("agent_name"),item.get("agent_company"),item.get("agent_phone")))
+                                      item.get("agent_name"),item.get("agent_company"),item.get("agent_phone")
+                                      ,item.get("source_name"),item.get("category"),item.get("recent_activation")))
 
         elif isinstance(item, DistrictItem):
             stmt = """insert into district (district, subdistrict, url,category,source, project, server, dt, spider)

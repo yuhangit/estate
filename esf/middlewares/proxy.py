@@ -5,12 +5,16 @@ import urllib
 import requests
 from bs4 import BeautifulSoup
 import time
-from stem import Signal
-from stem.control import Controller
+
+try:
+    from stem import Signal
+    from stem.control import Controller
+except:
+    print("lack of stem library for TorProxyMiddleware, install first ")
 
 from scrapy.utils.project import get_project_settings
 from scrapy.http import Request
-from  twisted.internet.error import TimeoutError
+from twisted.internet.error import TimeoutError
 
 
 class TorProxyMiddleware(object):

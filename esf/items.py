@@ -42,6 +42,8 @@ class ScrapeItem(HouseKeepingItem):
     agent_name = Field()
     agent_company = Field()
     agent_phone = Field()
+    source_name = Field()
+    recent_activation = Field()
 
 
 class IndexItem(HouseKeepingItem):

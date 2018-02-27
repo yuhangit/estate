@@ -30,7 +30,8 @@ class AgentDistrictSpider(scrapy.Spider):
     def fresh_urls(self):
         with sqlite3.connect("data/esf_urls_test.db") as cnx:
             cursor = cnx.cursor()
-            cursor.execute("select DISTINCT source from district where subdistrict = 'nodef'")
+            cursor.execute("select DISTINCT source from district where subdistrict = 'nodef' and category = '?'",
+                           [self.category])
             urls = cursor.fetchall()
             cursor.executemany("DELETE from district where source = ?",urls)
             return [r[0] for r in urls]
@@ -74,6 +75,7 @@ class AgentDistrictSpider(scrapy.Spider):
             district_urls = response.xpath('(//*[text()="不限"])[1]//ancestor::p[@class="termcon fl"]//a[not(text()="不限")]')
         ###
 
+        # exception handled
         if not district_urls:
             self.logger.error("!!!! url: %s not found any districts, checkout again this  !!!!", response.url)
             l = ItemLoader(item=DistrictItem())
@@ -179,7 +181,7 @@ class AgentDistrictSpider(scrapy.Spider):
 
 class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
     name = "AgencyIndexPageSpider"
-
+    category = "agency"
     xpaths = ['//span[text()="下一页 >"]//ancestor::a[1]', # ganji
               '//a[text()=">"]',                              # centanet
               '//a[text()="下一页"]',                        # 5i5j, fang
@@ -197,7 +199,8 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
     def start_requests(self):
         with sqlite3.connect(get_project_settings().get("STORE_DATABASE")) as cnx:
             cursor = cnx.cursor()
-            cursor.execute("select district,subdistrict,url from main.district where instr(source, '.fang.com') > 0")
+            cursor.execute("select district,subdistrict,url from main.district "
+                           "where instr(source, '.fang.com') > 0 and category = ?",[self.category])
             url_infos = cursor.fetchall()
 
         for url_info in url_infos:
@@ -450,7 +453,7 @@ class TestCrawlSpider(scrapy.spiders.CrawlSpider):
     )
 
     def start_requests(self):
-      yield Request(url = 'https://sh.5i5j.com/jingjiren/xinzhuang/')
+      yield Request(url='https://sh.5i5j.com/jingjiren/xinzhuang/')
 
     def parse_start_url(self, response):
 
@@ -467,9 +470,9 @@ class TestCrawlSpider(scrapy.spiders.CrawlSpider):
             page_num = response.xpath('//div[@class="pageSty rf"]//a//text()').re(r'(\d+)')
             base_path = response.xpath('//div[@class="pageSty rf"]//a[not(@class="cur")]//@href').extract_first()
             if page_num:
-                for i in range(1,max(map(int,page_num))+1):
-                    url_path = response.urljoin(r.sub("%i/" %i,base_path))
-                    self.logger.critical("url: %s",url_path)
+                for i in range(1, max(map(int, page_num))+1):
+                    url_path = response.urljoin(r.sub("%i/" %i, base_path))
+                    self.logger.critical("url: %s", url_path)
                     yield Request(url=url_path, callback=self.parse_indexpage)
 
             else:
@@ -482,3 +485,35 @@ class TestCrawlSpider(scrapy.spiders.CrawlSpider):
 
     def parse_indexpage(self, response):
         yield {"url":response.url}
+
+from scrapy.http import FormRequest
+
+class TestFormSpider(scrapy.spiders.Spider):
+    start_urls = ["http://sh.centanet.com/ershoufang/shcns000009401.html"]
+    name = "TestFormSpider"
+    api_url = 'http://sh.centanet.com/page/v1/ajax/agent400.aspx'
+
+    def parse(self, response):
+        postid = response.xpath('//li[@class="collect"]/a/@para').re_first(r"postid:'([\w-]+)'")
+        type = "post"
+        formdata = {"postid":postid, "type":type}
+
+        title = response.xpath('//dl[@class="fl roominfor"]//h5/text()').extract_first()
+        district = response.xpath('(//div[@class="fl breadcrumbs-area f000 "]//a[@class="f000"])[3]/text()').extract_first()
+        subdistrict =response.xpath('(//div[@class="fl breadcrumbs-area f000 "]//a[@class="f000"])[4]/text()').extract_first()
+        agent_name = response.xpath( '//a[@class="f000 f18"]/b/text()').extract_first()
+
+        recent_activation = response.xpath('//p[@class="f333"]/span[@class="f666"][1]/text()').re(r"\d+")
+
+        meta = {"title":title, "district":district, "subdistrict":subdistrict,
+                "agent_name":agent_name,"recent_activation":recent_activation}
+        yield FormRequest(url=self.api_url, formdata=formdata,method="GET", meta=meta,callback=self.parse_item)
+
+    def parse_item(self, response):
+        print(response.text)
+        r = re.compile("[\\d-]+")
+        telephone = ":".join([i.replace("-", "") for i in r.findall(response.text)])
+        print(telephone)
+        meta = response.meta
+        meta.setdefault("telephone", telephone)
+        return meta
