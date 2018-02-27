@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sqlite3
 import csv
 
@@ -7,20 +8,41 @@ csvWriter = csv.writer(f, dialect="excel", delimiter="\t")
 with sqlite3.connect("data/esf_urls.db") as cnx:
     cursor = cnx.cursor()
     cursor.execute("""
-    with t1 as (select rowid,*  from agencies where district ='昆山' and name is not null),
-    t2 as(select name,telephone,count(*) as cnt, group_concat(DISTINCT subdist_id)
-      from t1
-      GROUP BY name,telephone
-      HAVING count(*) > 50)
-    SELECT agencies.telephone, agencies.dist_id,agencies.subdist_id
-      ,t2.cnt
-    from agencies
-      INNER JOIN  t2 on  agencies.telephone = t2.telephone
-    where dist_id = 99  
+        with t1 as (select rowid,*  from agencies where district ='昆山' and name is not null),
+        t2 as(select telephone,count(*) as cnt
+              from t1
+              GROUP BY telephone
+              ORDER BY cnt desc
+              LIMIT  25
+             )
+        SELECT t1.telephone,subdist_id, count(*), max(t2.cnt) from  t1 INNER JOIN t2 on t1.telephone = t2.telephone
+        GROUP BY  t1.telephone, subdist_id
+        order by max(t2.cnt) desc, count(*) desc
+        ;
     """)
-    rows = [(row[0],"%02d%02d%03d" %(row[1],row[2],row[3]))  for row in cursor.fetchall()]
+    rows = cursor.fetchall()
 
-csvWriter.writerows(rows)
+d = {}
+for row in rows:
+    d.setdefault((row[0], row[-1]), []).append(row[1])
 
+for k, v in d.items():
+    # make sure v is great or equal to 3
+    if len(v) < 3:
+        v = v[0:len(v)] + [0]*(3-len(v))
+    row = (k[0], "20203%02d0022" %(v[0]))
+    csvWriter.writerow(row)
 
+with sqlite3.connect("data/esf_urls.db") as cnx:
+    cursor = cnx.cursor()
+    cursor.execute("""
+      select telephone
+      from main.agencies 
+      where instr(source,'.fang.com') >0 and district ='上海周边' and subdistrict= '昆山'
+      ORDER BY second_house_amount DESC 
+      LIMIT 25
+""")
+    rows = cursor.fetchall()
 
+for row in rows:
+    csvWriter.writerow([row[0], "20202030822"])
