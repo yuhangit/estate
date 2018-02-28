@@ -16,6 +16,7 @@ except:
 from scrapy.utils.project import get_project_settings
 from scrapy.http import Request
 from twisted.internet.error import TimeoutError
+from scrapy.exceptions import IgnoreRequest
 
 
 class TorProxyMiddleware(object):
@@ -165,6 +166,9 @@ class HTTPProxyMiddleware(object):
         #         request.meta['cnt'] = request.meta.get('cnt', 0) + 1
         #         logging.info("exception happened")
         #         return request
+        if isinstance(exception,IgnoreRequest):
+            self.loger.exception("Ignore Request <%s>", request.url)
+            return IgnoreRequest
         if request.url.startswith("http://10.") :
             return None
 
