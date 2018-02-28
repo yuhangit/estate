@@ -80,6 +80,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         yield l.load_item()
 
     def start_requests(self):
+        # 刷新被服务器防火墙屏蔽的网页
         if get_project_settings().get('REFRESH_URLS') != 0:
             self.logger.critical("refresh urls ....")
             with sqlite3.connect("data/esf_urls.db") as cnx:
@@ -87,6 +88,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
                 cursor.execute("select source from main.agencies where name is null and district ='昆山'")
                 urls = [r[0] for r in cursor.fetchall()]
                 cursor.execute("DELETE from main.agencies where name is null and district ='昆山'")
+                cursor.execute("DELETE from main.properties where source_name = '昆山视窗' and name is NULL ")
                 cnx.commit()
             for url in urls:
                 yield Request(url=url, callback=self.parse_item)

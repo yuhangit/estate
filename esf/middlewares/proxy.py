@@ -5,6 +5,7 @@ import urllib
 import requests
 from bs4 import BeautifulSoup
 import time
+import sqlite3
 
 try:
     from stem import Signal
@@ -78,6 +79,7 @@ class HTTPProxyMiddleware(object):
         self.time = time.time()
         self.loger = logging.getLogger(__file__)
         self.query_proxies()
+
 
     def query_proxies(self):
         api = get_project_settings().get("PROXY_API")
@@ -166,7 +168,7 @@ class HTTPProxyMiddleware(object):
         if request.url.startswith("http://10.") :
             return None
 
-        self.loger.info("exception:%s", str(exception))
+        self.loger.info("exception in <%s>:%s",request.url ,str(exception))
         if isinstance(exception,TimeoutError):
             # self.loger.info("timeout error happened, retry: %s" % request.url)
             request.meta["timeout_retry"] = request.meta.get("timeout_retry", 0) + 1
