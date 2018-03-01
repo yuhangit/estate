@@ -74,8 +74,8 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'esf.pipelines.SqlitePipeline': 300,
-    # 'esf.pipelines.MysqlWriter': 400
+    # 'esf.pipelines.SqlitePipeline': 300,
+    'esf.pipelines.MysqlWriter': 400
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
