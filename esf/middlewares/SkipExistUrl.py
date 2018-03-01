@@ -30,7 +30,7 @@ class SkipExistUrlMiddleware(object):
         retried_urls = properties_retrieved_urls + agencies_retrieved_urls
 
         if request.url in retried_urls:
-            return IgnoreRequest()
+            raise IgnoreRequest("url <%s> has already processed" % request.url)
 
     @staticmethod
     def parse_mysql_url(mysql_url):
