@@ -8,7 +8,7 @@ csvWriter = csv.writer(f, dialect="excel", delimiter="\t")
 with sqlite3.connect("data/esf_urls.db") as cnx:
     cursor = cnx.cursor()
     cursor.execute("""
-        with t1 as (select rowid,*  from agencies where district ='昆山' and name is not null),
+        with t1 as (select *  from agencies where district ='昆山' and name is not null),
         t2 as(select telephone,count(*) as cnt
               from t1
               GROUP BY telephone
