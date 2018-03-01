@@ -26,7 +26,7 @@ class SkipExistUrlMiddleware(object):
         properties_retrieved_urls = [r[0] for r in
                           self.cursor.execute("select url from estate.properties").fetchall()]
         agencies_retrieved_urls = [r[0] for r in
-                          self.cursor.execute("select source from estate.agencies")]
+                          self.cursor.execute("select source from estate.agencies").fetchall()]
         retried_urls = properties_retrieved_urls + agencies_retrieved_urls
 
         if request.url in retried_urls:
