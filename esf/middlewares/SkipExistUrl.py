@@ -23,6 +23,7 @@ class SkipExistUrlMiddleware(object):
         self.cursor = self.cnx.cursor()
 
     def process_request(self, request, spider):
+
         self.cursor.execute("select url from estate.properties")
         properties_retrieved_urls = [r[0] for r in self.cursor.fetchall()]
         self.cursor.execute("select source from estate.agencies")
