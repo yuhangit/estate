@@ -108,7 +108,7 @@ class MysqlWriter(object):
                 logger.error("Can't connect to mysql:%s",self.mysql_url)
                 self.report_connection_error = False
         except:
-            logger.exception(traceback.format_exc(),'\n',item.get("url") or item.get("source"))
+            logger.exception(traceback.format_exc()+ "\n%s", item.get("url") or item.get("source") or "no url")
 
         defer.returnValue(item)
 

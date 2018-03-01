@@ -167,7 +167,7 @@ class HTTPProxyMiddleware(object):
         #         logging.info("exception happened")
         #         return request
         if isinstance(exception, IgnoreRequest):
-            self.loger.exception("Ignore Request <%s>", request.url)
+            self.loger.error("Ignore Request <%s>", request.url)
             return None
         if request.url.startswith("http://10.") :
             return None
