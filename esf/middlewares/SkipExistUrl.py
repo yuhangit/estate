@@ -4,6 +4,7 @@ from scrapy.exceptions import NotConfigured, IgnoreRequest
 from twisted.internet import defer
 from twisted.enterprise import adbapi
 
+
 class SkipExistUrlMiddleware(object):
     @classmethod
     def from_crawler(cls, crawler):
@@ -22,15 +23,14 @@ class SkipExistUrlMiddleware(object):
         self.cursor = self.cnx.cursor()
 
     def process_request(self, request, spider):
-
-        properties_retrieved_urls = [r[0] for r in
-                          self.cursor.execute("select url from estate.properties").fetchall()]
-        agencies_retrieved_urls = [r[0] for r in
-                          self.cursor.execute("select source from estate.agencies").fetchall()]
+        self.cursor.execute("select url from estate.properties")
+        properties_retrieved_urls = [r[0] for r in self.cursor.fetchall()]
+        self.cursor.execute("select source from estate.agencies")
+        agencies_retrieved_urls = [r[0] for r in self.cursor.fetchall()]
         retried_urls = properties_retrieved_urls + agencies_retrieved_urls
 
         if request.url in retried_urls:
-            return IgnoreRequest
+            return IgnoreRequest()
 
     @staticmethod
     def parse_mysql_url(mysql_url):
