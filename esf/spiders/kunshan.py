@@ -11,12 +11,8 @@ import sqlite3
 import re
 import socket
 import datetime
-from urllib.request import urljoin, urlparse
-import random
-import time
-import logging
-from bs4 import BeautifulSoup
-import requests
+import pymysql
+import dj_database_url
 
 
 class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
@@ -80,22 +76,33 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         yield l.load_item()
 
     def start_requests(self):
-        # 刷新被服务器防火墙屏蔽的网页
-        if get_project_settings().get('REFRESH_URLS') != 0:
-            self.logger.critical("refresh urls ....")
-            with sqlite3.connect("data/esf_urls.db") as cnx:
-                cursor = cnx.cursor()
-                cursor.execute("select source from main.agencies where name is null and district ='昆山'")
-                urls = [r[0] for r in cursor.fetchall()]
-                cursor.execute("DELETE from main.agencies where name is null and district ='昆山'")
-                cursor.execute("DELETE from main.properties where source_name = '昆山视窗' and name is NULL ")
-                cnx.commit()
-            for url in urls:
-                yield Request(url=url, callback=self.parse_item)
-        else:
-            for url in self.start_urls:
-                yield Request(url=url)
 
+        self.logger.critical("refresh urls ....")
+        db_para = self.__class__.parse_mysql_url(get_project_settings().get("MYSQL_PIPELINE_URL"))
+        # 刷新被服务器防火墙屏蔽的网页, SkipExistUrl
+        with pymysql.connect(**db_para) as cnx:
+            cursor = cnx.cursor()
+            cnt = cursor.execute("DELETE from estate.agencies where name is null and district ='昆山'")
+            self.logger.info("delete %s from estate.agencies where name is null and district = '昆山'", cnt)
+            cnt = cursor.execute("DELETE from estate.properties where source_name = '昆山视窗' and name is NULL ")
+            self.logger.info("delete %s from estate.properties source_name = '昆山视窗' and name is NULL ", cnt)
+            cnx.commit()
+
+        for url in self.start_urls:
+            yield Request(url=url)
+
+    @staticmethod
+    def parse_mysql_url(mysql_url):
+        params = dj_database_url.parse(mysql_url)
+        conn_kwargs = {}
+        conn_kwargs["host"] = params["HOST"]
+        conn_kwargs["user"] = params["USER"]
+        conn_kwargs["passwd"] = params["PASSWORD"]
+        conn_kwargs["db"] = params["NAME"]
+        conn_kwargs["port"] = params["PORT"]
+        # remove items with empty values
+        conn_kwargs = dict((k, v) for k, v in conn_kwargs.items() if v)
+        return conn_kwargs
     # def parse(self, response):
     #     self.logger.info("start parese url %s" %response.url)
     #     for div in response.xpath('//ul[@id="xylist"]/li[@class="listzwt"]'):
