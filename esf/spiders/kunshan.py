@@ -91,7 +91,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         self.logger.critical("refresh urls ....")
         db_para = self.__class__.parse_mysql_url(get_project_settings().get("MYSQL_PIPELINE_URL"))
         # 刷新被服务器防火墙屏蔽的网页, SkipExistUrl
-        cnx = pymysql.connect(**db_para, encoding="utf8")
+        cnx = pymysql.connect(**db_para, charset="utf8")
         with cnx.cursor() as cursor:
 
             cnt = cursor.execute("""DELETE from estate.agencies_temp 
