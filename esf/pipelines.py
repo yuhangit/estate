@@ -97,9 +97,9 @@ class MysqlWriter(object):
                                             **conn_kwargs)
         self.cnx = pymysql.connect(**conn_kwargs,charset="utf8")
 
-
     def close_spider(self, spider):
         self.dbpool.close()
+        self.cnx.close()
 
     @defer.inlineCallbacks
     def process_item(self, item, spider):
@@ -151,7 +151,7 @@ class MysqlWriter(object):
             tx.execute(stmt, (item.get("title"), item.get("url"), item.get("price"), item.get("address"),
                               item.get("source"), item.get("project"), item.get("server"), item.get("dt"),
                               item.get("spider"), item.get("agent_name"), item.get("agent_company"),
-                              item.get("agent_phone"), item.get("station_name"), ids.get("district_id")
+                              item.get("agent_phone"), item.get("recent_activation"), ids.get("district_id")
                               , ids.get("station_id"), ids.get("category_id")))
 
         elif isinstance(item, DistrictItem):
