@@ -119,6 +119,8 @@ class MysqlWriter(object):
     def retrieve_id(self, spider, item):
         logger = spider.logger
         category_id, station_id, district_id = None, None, None
+        logger.info("item contain: %s,%s,%s,%s,%s", item.get("category"), item.get("station_name"),
+                    item.get("city_name"), item.get("dist_name"), item.get("subdist_name"))
         try:
             with self.cnx.cursor() as cursor:
                 category_sql = "select category_id from estate.category_rel where category_name = %s"
