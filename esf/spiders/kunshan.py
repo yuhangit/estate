@@ -55,7 +55,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         l.add_value("project", self.settings.get("BOT_NAME"))
         l.add_value("spider", self.name)
         l.add_value("server", socket.gethostname())
-        l.add_value("date", datetime.datetime.utcnow())
+        l.add_value("dt", datetime.datetime.utcnow())
         item = l.load_item()
 
         if not item.get("subdist_name"):
@@ -63,6 +63,8 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
             f = open("html_%s.html" % parse_qs(urlparse(response.url).query).get("id")[0], 'w', encoding='utf8')
             f.write(response.text)
             f.close()
+            # return Request(url=response.url)
+
         yield item
 
         # properties table
@@ -92,7 +94,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         l.add_value("project", self.settings.get("BOT_NAME"))
         l.add_value("spider", self.name)
         l.add_value("server", socket.gethostname())
-        l.add_value("date", datetime.datetime.utcnow())
+        l.add_value("dt", datetime.datetime.utcnow())
         yield l.load_item()
 
     def start_requests(self):

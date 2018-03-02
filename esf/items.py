@@ -17,7 +17,7 @@ class EsfItem(scrapy.Item):
 
 class HouseKeepingItem(scrapy.Item):
     # housekeeping
-    date = Field()
+    dt = Field()
     source = Field()
     spider = Field()
     project = Field()
