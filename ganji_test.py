@@ -39,7 +39,7 @@ class BasicSpider:
         self.file = open(name+".csv","a")
         self.csvWriter = csv.writer(self.file,delimiter='\t')
 
-        # initial district urls
+        # initial dist_name urls
         self.lvl1_urls = self._retrive("lvl1_urls",0)
         self.lvl1_urls_retrived = self._retrive("lvl1_urls", 1)
 
@@ -159,7 +159,7 @@ class BasicSpider:
         self.driver = driver
 
     def _get_start_urls(self,url):
-        # get first district level
+        # get first dist_name level
 
         self.req = self.session.get(url)
         bs = BeautifulSoup(self.req.text)
@@ -192,8 +192,8 @@ class BasicSpider:
         for url in self.lvl0_urls:
             print(url)
         # districts = self.driver.find_element_by_id("plateList")
-        # for district in districts.find_elements_by_xpath("//div[@class='level1']/a"):
-        #     dist_url = urljoin(self.start_url,district.get_attribute("href"))
+        # for dist_name in districts.find_elements_by_xpath("//div[@class='level1']/a"):
+        #     dist_url = urljoin(self.start_url,dist_name.get_attribute("href"))
         #     if dist_url not in self.lvl0_urls_retrived:
         #         level0_urls.add(dist_url)
         # self.lvl0_urls.update(level0_urls)

@@ -40,9 +40,9 @@ class DistrictSpider(scrapy.Spider):
     def fresh_urls(self):
         with sqlite3.connect("data/esf_urls_test.db") as cnx:
             cursor = cnx.cursor()
-            cursor.execute("select DISTINCT source from district where subdistrict = 'nodef'")
+            cursor.execute("select DISTINCT source from district_rel where subdist_name = 'nodef'")
             urls = cursor.fetchall()
-            cursor.executemany("DELETE from district where source = ?",urls)
+            cursor.executemany("DELETE from district_rel where source = ?", urls)
             return [r[0] for r in urls]
 
     def parse(self, response):
@@ -60,19 +60,19 @@ class DistrictSpider(scrapy.Spider):
         district_urls = response.xpath('(//*[text()="不限"])[1]//..//a[not(text()="不限")]')
         # ganji
         if not district_urls:
-            self.logger.info("ganji/fangdd_esf/qfang/netease district ...")
+            self.logger.info("ganji/fangdd_esf/qfang/netease dist_name ...")
             district_urls = response.xpath('(//*[text()="不限"])[1]//ancestor::ul//a[not(text()="不限")]')
         # 58 商铺
         if not district_urls:
-            self.logger.info("58 district ...")
+            self.logger.info("58 dist_name ...")
             district_urls = response.xpath('//*[contains(text(),"全上海")]//..//a[not(contains(text(),"全上海"))]')
         # 安居客
         if not district_urls:
-            self.logger.info("anjuke district ...")
+            self.logger.info("anjuke dist_name ...")
             district_urls = response.xpath('(//*[text()="全部"])[1]//..//a[not(text()="全部")]')
         # 5a5j
         if not district_urls:
-            self.logger.info("5a5j district ...")
+            self.logger.info("5a5j dist_name ...")
             district_urls = response.xpath('(//*[text()="全部"])[1]//ancestor::ul[1]//a[not(.//text()="全部")]')
 
         category = self.get_category(response.url)
@@ -81,7 +81,7 @@ class DistrictSpider(scrapy.Spider):
             district_name = "".join(url.xpath('.//text()').extract()).strip()
 
             yield Request(url=district_url, callback=self.parse_subdistrict,
-                          meta={"district_name": district_name, "category": category})
+                          meta={"dist_name": district_name, "category": category})
 
     def parse_subdistrict(self, response):
         """
@@ -97,7 +97,7 @@ class DistrictSpider(scrapy.Spider):
 
         # ganji
         if not subdistrict_urls:
-            self.logger.info("ganji subdistrict...")
+            self.logger.info("ganji subdist_name...")
             subdistrict_urls = response.xpath('(//*[text()="不限"])[2]//ancestor::div[@class="fou-list f-clear"]//a[not(text()="不限")]')
 
         # 58
@@ -107,35 +107,35 @@ class DistrictSpider(scrapy.Spider):
 
         # fangdd
         if not subdistrict_urls:
-            self.logger.info("fangdd subdistrict ...")
+            self.logger.info("fangdd subdist_name ...")
             subdistrict_urls = response.xpath('(//*[text()="不限"])[2]//ancestor::ul//a[not(text()="不限")]')
 
         # 5a5j
         if not subdistrict_urls:
-            self.logger.info("5a5j subdistrict ...")
+            self.logger.info("5a5j subdist_name ...")
             subdistrict_urls = response.xpath('//dd[@class="block"]//a')
 
         # anjuke
         if not subdistrict_urls:
-            self.logger.info("anjuke subdistrict ...")
+            self.logger.info("anjuke subdist_name ...")
             subdistrict_urls = response.xpath('(//*[text()="全部"])[2]//ancestor::div[@class="sub-items"]//a[not(text()="全部")]')
 
         # lianjia
         if not subdistrict_urls:
-            self.logger.info("lianjia subdistrict ...")
+            self.logger.info("lianjia subdist_name ...")
             subdistrict_urls = response.xpath('(//*[text()="不限"])[2]//ancestor::div[@class="option-list sub-option-list"]//a[not(text()="不限")]')
 
-        district = response.meta.get("district_name")
+        district = response.meta.get("dist_name")
         category = response.meta.get("category")
 
-        # ！！ if no subdistrict exists, add nodef into subdistrict
+        # ！！ if no subdist_name exists, add nodef into subdist_name
         if not subdistrict_urls:
-            self.logger.critical("!!!!  not subdistrict found , make sure this  !!!!")
+            self.logger.critical("!!!!  not subdist_name found , make sure this  !!!!")
             self.logger.critical("url: %s", response.url)
             l = ItemLoader(item=DistrictItem())
             l.default_output_processor = TakeFirst()
-            l.add_value("district", district)
-            l.add_value("subdistrict", "nodef")
+            l.add_value("dist_name", district)
+            l.add_value("subdist_name", "nodef")
             l.add_value("url", response.url)
             l.add_value("category", category)
 
@@ -153,8 +153,8 @@ class DistrictSpider(scrapy.Spider):
 
             l = ItemLoader(item=DistrictItem(), selector=url)
             l.default_output_processor = TakeFirst()
-            l.add_value("district", district)
-            l.add_value("subdistrict", subdistrict)
+            l.add_value("dist_name", district)
+            l.add_value("subdist_name", subdistrict)
             l.add_value("url", subdistrict_url)
             l.add_value("category", category)
 
@@ -180,8 +180,8 @@ class DistrictSpider(scrapy.Spider):
 
             l = ItemLoader(item=DistrictItem(), selector=url)
             l.default_output_processor = TakeFirst()
-            l.add_value("district", district)
-            l.add_value("subdistrict", subdistrict)
+            l.add_value("dist_name", district)
+            l.add_value("subdist_name", subdistrict)
             l.add_value("url", url)
             l.add_value("category", category)
 
@@ -200,8 +200,8 @@ class DistrictSpider(scrapy.Spider):
 
             l = ItemLoader(item=DistrictItem(), selector=url)
             l.default_output_processor = TakeFirst()
-            l.add_value("district", district)
-            l.add_value("subdistrict", subdistrict)
+            l.add_value("dist_name", district)
+            l.add_value("subdist_name", subdistrict)
             l.add_value("url", url)
 
             l.add_value("source", response.request.url)

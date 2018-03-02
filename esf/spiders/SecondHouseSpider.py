@@ -5,7 +5,7 @@ from scrapy.loader.processors import TakeFirst, Join , MapCompose
 from scrapy.linkextractors import LinkExtractor
 from scrapy.utils.project import get_project_settings
 from scrapy.http import Request
-from esf.items import AgentItem, DistrictItem,IndexItem,ScrapeItem
+from esf.items import AgentItem, DistrictItem,IndexItem,PropertyItem
 from scrapy.loader import ItemLoader
 
 from urllib.parse import urlparse,urlencode
@@ -47,8 +47,8 @@ class SecondHouseDistrictSpider(scrapy.Spider):
             self.logger.error("!!!! url: %s not found any districts, checkout again this  !!!!", response.url)
             l = ItemLoader(item=DistrictItem())
             l.default_output_processor = TakeFirst()
-            l.add_value("district", "nodef")
-            l.add_value("subdistrict", "nodef")
+            l.add_value("dist_name", "nodef")
+            l.add_value("subdist_name", "nodef")
             l.add_value("url", response.url)
             l.add_value("category", self.category)
 
@@ -65,7 +65,7 @@ class SecondHouseDistrictSpider(scrapy.Spider):
             district_name = "".join(url.xpath('.//text()').extract()).strip()
 
             yield Request(url=district_url, callback=self.parse_subdistrict,
-                          meta={"district_name": district_name, "category": self.category})
+                          meta={"dist_name": district_name, "category": self.category})
 
     def parse_subdistrict(self, response):
         subdistrict = []
@@ -99,7 +99,7 @@ class SecondHouseDistrictSpider(scrapy.Spider):
             subdistrict = response.xpath('(//a[text()="不限"])[2]//ancestor::ul'
                                          '[@class="search-area-second clearfix"]//a[not(text()="不限")]')
 
-        district = response.meta.get("district_name")
+        district = response.meta.get("dist_name")
         category = response.meta.get("category")
 
         # exception handle
@@ -107,8 +107,8 @@ class SecondHouseDistrictSpider(scrapy.Spider):
             self.logger.critical("!!!! url: <%s> not  found any sub_districts, checkout again  !!!!", response.url)
             l = ItemLoader(item=DistrictItem())
             l.default_output_processor = TakeFirst()
-            l.add_value("district", district)
-            l.add_value("subdistrict", "nodef")
+            l.add_value("dist_name", district)
+            l.add_value("subdist_name", "nodef")
             l.add_value("url", response.url)
             l.add_value("category", category)
 
@@ -126,8 +126,8 @@ class SecondHouseDistrictSpider(scrapy.Spider):
 
             l = ItemLoader(item=DistrictItem(), selector=url)
             l.default_output_processor = TakeFirst()
-            l.add_value("district", district)
-            l.add_value("subdistrict", subdistrict)
+            l.add_value("dist_name", district)
+            l.add_value("subdist_name", subdistrict)
             l.add_value("url", subdistrict_url)
             l.add_value("category", category)
 
@@ -156,12 +156,12 @@ class SecondHouseIndexPageSpider(scrapy.spiders.CrawlSpider):
     def start_requests(self):
         with sqlite3.connect(get_project_settings().get("STORE_DATABASE")) as cnx:
             cursor = cnx.cursor()
-            cursor.execute("select district,subdistrict,url from main.district "
+            cursor.execute("select dist_name,subdist_name,url from main.dist_name "
                            "where instr(source, '.centanet.com') > 0 and category = ?", [self.category])
             url_infos = cursor.fetchall()
 
         for url_info in url_infos:
-            meta = {"district":url_info[0],"subdistrict":url_info[1]}
+            meta = {"dist_name":url_info[0],"subdist_name":url_info[1]}
             yield Request(url=url_info[2], meta=meta)
 
     def parse_indexpage(self, response):
@@ -181,11 +181,11 @@ class SecondHouseIndexPageSpider(scrapy.spiders.CrawlSpider):
         self.logger.info("process centanet url")
         divs = response.xpath('//div[@class="house-item clearfix"]')
         for div in divs:
-            l = ItemLoader(item=ScrapeItem(), selector=div)
+            l = ItemLoader(item=PropertyItem(), selector=div)
             l.default_output_processor = TakeFirst()
             l.add_xpath("title", '//dl[@class="fl roominfor"]//h5/text()')
-            l.add_xpath("district", '//div[@class="fl breadcrumbs-area f000 "]//a[@class="f000"])[3]/text()', MapCompose(lambda x: x.strip()))
-            l.add_xpath("subdistrict", '//div[@class="fl breadcrumbs-area f000 "]//a[@class="f000"])[4]/text()', MapCompose(lambda x: x.strip()))
+            l.add_xpath("dist_name", '//div[@class="fl breadcrumbs-area f000 "]//a[@class="f000"])[3]/text()', MapCompose(lambda x: x.strip()))
+            l.add_xpath("subdist_name", '//div[@class="fl breadcrumbs-area f000 "]//a[@class="f000"])[4]/text()', MapCompose(lambda x: x.strip()))
             l.add_xpath("agent_name", '//a[@class="f000 f18"]/b/text()')
             l.add_xpath("recent_activation", '//p[@class="f333"]/span[@class="f666"][1]/text()',
                         MapCompose(lambda x: int(x)), re=r"\d+")

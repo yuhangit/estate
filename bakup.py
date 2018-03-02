@@ -11,7 +11,7 @@ copyfile(src,db_bakup)
 if sys.argv[1] == "d":
     with sqlite3.connect(src) as cnx:
         cursor = cnx.cursor()
-        cursor.execute("DELETE from main.district")
+        cursor.execute("DELETE from main.dist_name")
         cursor.execute("DELETE from main.agencies")
         cursor.execute("DELETE from main.index_pages")
         cursor.execute("DELETE FROM main.properties")

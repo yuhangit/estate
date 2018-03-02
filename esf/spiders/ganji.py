@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from esf.items import ScrapeItem,IndexItem
+from esf.items import PropertyItem,IndexItem
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose,Join,TakeFirst
 from scrapy.linkextractors import LinkExtractor
@@ -54,7 +54,7 @@ class GanjiSpider(CrawlSpider):
         subdistrict = response.xpath("(//a[text()='不限'])[2]//ancestor::div//a[@class='subway-item current']//text()").extract_first()
 
         for div in response.xpath("//div[contains(@id,'puid-')]"):
-            l = ItemLoader(item=ScrapeItem(), selector=div)
+            l = ItemLoader(item=PropertyItem(), selector=div)
             l.default_output_processor = TakeFirst()
             l.add_xpath("title","(.//a)[2]/text()", MapCompose(lambda x: self.spc_reg.sub("",x)))
             l.add_xpath("url","(.//a)[2]/@href",
@@ -62,8 +62,8 @@ class GanjiSpider(CrawlSpider):
             l.add_xpath("price", ".//div[@class='price']//text()",Join())
             l.add_xpath("address",".//span[@class='area']//text()",
                         MapCompose(lambda x: self.spc_reg.sub("",x)),Join())
-            l.add_value("district",district)
-            l.add_value("subdistrict",subdistrict)
+            l.add_value("dist_name",district)
+            l.add_value("subdist_name",subdistrict)
 
             # housekeeping
             l.add_value("source", response.url)
@@ -120,7 +120,7 @@ class PageScrape(scrapy.Spider):
             "(//a[text()='不限'])[2]//ancestor::div//a[@class='subway-item current']//text()").extract_first()
 
         for div in response.xpath("//div[contains(@id,'puid-')]"):
-            l = ItemLoader(item=ScrapeItem(), selector=div)
+            l = ItemLoader(item=PropertyItem(), selector=div)
             l.default_output_processor = TakeFirst()
             l.add_xpath("title", "(.//a)[2]/text()", MapCompose(lambda x: self.spc_reg.sub("", x)))
             l.add_xpath("url", "(.//a)[2]/@href",
@@ -128,8 +128,8 @@ class PageScrape(scrapy.Spider):
             l.add_xpath("price", ".//div[@class='price']//text()", Join())
             l.add_xpath("address", ".//span[@class='area']//text()",
                         MapCompose(lambda x: self.spc_reg.sub("", x)), Join())
-            l.add_value("district", district)
-            l.add_value("subdistrict", subdistrict)
+            l.add_value("dist_name", district)
+            l.add_value("subdist_name", subdistrict)
 
             # housekeeping
             l.add_value("source", response.url)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from esf.items import ScrapeItem, IndexItem, DistrictItem
+from esf.items import PropertyItem, IndexItem, DistrictItem
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose,Join,TakeFirst
 from scrapy.linkextractors import LinkExtractor
@@ -51,11 +51,11 @@ class FangScrapeSpider(scrapy.Spider):
         subdistrict = response.xpath('(//a[@id = "list_105"]/../a)[2]/text()').extract_first()
 
         for div in response.xpath('//dl[contains(@id,"list_D")]'):
-            l = ItemLoader(item=ScrapeItem(), selector=div)
+            l = ItemLoader(item=PropertyItem(), selector=div)
             l.default_output_processor = TakeFirst()
             url = urljoin(response.url, urlparse(div.xpath("(.//a)[1]//@href").extract_first()).path)
 
-            yield Request(url, callback=self.scrape_content_secondhouse, meta={"district":district,"subdistrict":subdistrict})
+            yield Request(url, callback=self.scrape_content_secondhouse, meta={"dist_name":district,"subdist_name":subdistrict})
         self._upd_retrived(response.url, 1)
         #i['domain_id'] = response.xpath('//input[@id="sid"]/@value').extract()
         #i['name'] = response.xpath('//div[@id="name"]').extract()
@@ -63,7 +63,7 @@ class FangScrapeSpider(scrapy.Spider):
 
     def scrape_content_secondhouse(self, response):
         self.logger.critical("scrape item from <%s>", response.url)
-        l = ItemLoader(item=ScrapeItem(),response=response)
+        l = ItemLoader(item=PropertyItem(), response=response)
         l.default_output_processor = TakeFirst()
         l.add_xpath("agent_name", '//a[@id="agantesfxq_C04_02"]/text()')
         l.add_xpath("agent_company", '(//div[@class="tjcont-list-cline2"]/span)[2]/text()')
@@ -71,8 +71,8 @@ class FangScrapeSpider(scrapy.Spider):
         l.add_xpath("title", '(//div[@id="lpname"]/div)[1]/text()',MapCompose(lambda x: self.spc_reg.sub("",x)),Join('-'))
         l.add_xpath("price", '//*[text() ="万"]//text()',Join())
         l.add_xpath("address", '//a[@id="agantesfxq_C03_05"]/text()')
-        l.add_value("district", response.meta.get("district"))
-        l.add_value("subdistrict", response.meta.get("subdistrict"))
+        l.add_value("dist_name", response.meta.get("dist_name"))
+        l.add_value("subdist_name", response.meta.get("subdist_name"))
         l.add_value("url",response.url)
 
         l.add_value("source", response.request.url)
@@ -166,7 +166,7 @@ class FangAllScrapeScripe(scrapy.Spider):
     def parse(self, response):
         self.logger.info("start parese url %s" %response.url)
         for div in response.xpath('//div[@class="house-listBox"]/div'):
-            l = ItemLoader(item=ScrapeItem(), selector=div)
+            l = ItemLoader(item=PropertyItem(), selector=div)
             l.default_output_processor = TakeFirst()
             l.add_xpath("title",'(.//a)[2]/text()', MapCompose(lambda x: self.spc_reg.sub("",x)))
             l.add_xpath("url","(.//a)[2]/@href",
@@ -175,9 +175,9 @@ class FangAllScrapeScripe(scrapy.Spider):
             l.add_xpath("address",'.//a[@class="f000 mr_10"]//text()',
                         MapCompose(lambda x: self.spc_reg.sub("",x)),Join())
 
-            l.add_xpath("district", './/p[@class="f7b mb_15"]/text()',Join(), MapCompose(lambda x: x.split("-")[0].strip()))
+            l.add_xpath("dist_name", './/p[@class="f7b mb_15"]/text()',Join(), MapCompose(lambda x: x.split("-")[0].strip()))
 
-            l.add_xpath("subdistrict",'.//p[@class="f7b mb_15"]/text()',Join(), MapCompose(lambda x: x.split("-")[1].split()[0]))
+            l.add_xpath("subdist_name",'.//p[@class="f7b mb_15"]/text()',Join(), MapCompose(lambda x: x.split("-")[1].split()[0]))
 
             # housekeeping
             l.add_value("source", response.url)
@@ -229,12 +229,12 @@ class FangSpider(scrapy.Spider):
 
             distinct = dist_url.xpath('./text()').extract_first()
             if 'esf.sh.fang.com' in url:
-                yield Request(url, callback=self.get_subdist_urls_secondhouse, meta={"district":distinct})
+                yield Request(url, callback=self.get_subdist_urls_secondhouse, meta={"dist_name":distinct})
             elif 'newhouse.sh.fang.com' in url:
-                yield Request(url, callback=self.get_subdist_urls_newhouse, meta={"district":distinct})
+                yield Request(url, callback=self.get_subdist_urls_newhouse, meta={"dist_name":distinct})
 
     def get_subdist_urls_secondhouse(self, response):
-        district = response.meta.get("district")
+        district = response.meta.get("dist_name")
         subdist_urls = response.xpath('(//*[text() = "不限"])[2]/following-sibling::a')
         for subdist_url in subdist_urls:
             subdistrict = subdist_url.xpath('./text()').extract_first()
@@ -243,8 +243,8 @@ class FangSpider(scrapy.Spider):
             l = ItemLoader(item=DistrictItem())
             l.default_output_processor = TakeFirst()
             l.add_value("url",url)
-            l.add_value("district", district)
-            l.add_value("subdistrict", subdistrict)
+            l.add_value("dist_name", district)
+            l.add_value("subdist_name", subdistrict)
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
@@ -253,13 +253,13 @@ class FangSpider(scrapy.Spider):
 
             yield l.load_item()
             yield Request(url, callback=self.parse_index_secondhouse, meta=
-                {"district":district,"subdistrict":subdistrict})
+                {"dist_name":district,"subdist_name":subdistrict})
 
     def parse_index_secondhouse(self, response):
         self.logger.critical("starting parse index page of second house: %s", response.url)
         last_page = urlparse(response.xpath('//a[text()="末页"]/@href').extract_first()).path
-        district = response.meta.get("district")
-        subdistrict = response.meta.get("subdistrict")
+        district = response.meta.get("dist_name")
+        subdistrict = response.meta.get("subdist_name")
         if last_page:
             self.logger.info('-' * 12 + str(self.page_num_reg.findall(last_page)[0][1])+ '-' * 12)
             last_page_num = int(self.page_num_reg.findall(last_page)[0][1])
@@ -280,7 +280,7 @@ class FangSpider(scrapy.Spider):
 
                 yield l.load_item()
                 yield Request(url, callback=self.parse_item_secondhouse,
-                              meta={"district":district,"subdistrict":subdistrict})
+                              meta={"dist_name":district,"subdist_name":subdistrict})
         else:
             l = ItemLoader(item=IndexItem())
             l.default_output_processor = TakeFirst()
@@ -296,15 +296,15 @@ class FangSpider(scrapy.Spider):
 
             yield l.load_item()
             yield Request(url, callback=self.parse_item_secondhouse
-                          ,meta={"district":district,"subdistrict":subdistrict})
+                          ,meta={"dist_name":district,"subdist_name":subdistrict})
 
     def parse_item_secondhouse(self, response):
-        district = response.meta.get("district")
-        subdistrict = response.meta.get("subdistrict")
+        district = response.meta.get("dist_name")
+        subdistrict = response.meta.get("subdist_name")
         for div in response.xpath('//dl[contains(@id,"list")]'):
             url = urljoin(response.url,urlparse(div.xpath("(.//a)[1]//@href").extract_first()).path)
             yield Request(url, callback= self.scrape_content_secondhouse
-                          ,meta={"district":district,"subdistrict":subdistrict,
+                          ,meta={"dist_name":district,"subdist_name":subdistrict,
                                  "source_url":response.url})
             self.update_index_page(response)
 
@@ -317,7 +317,7 @@ class FangSpider(scrapy.Spider):
 
     def scrape_content_secondhouse(self, response):
         self.logger.critical("scrape item from <%s>", response.url)
-        l = ItemLoader(item=ScrapeItem(),response=response)
+        l = ItemLoader(item=PropertyItem(), response=response)
         l.default_output_processor = TakeFirst()
         l.add_xpath("agent_name", '//a[@id="agantesfxq_C04_02"]/text()')
         l.add_xpath("agent_company", '(//div[@class="tjcont-list-cline2"]/span)[2]/text()')
@@ -325,8 +325,8 @@ class FangSpider(scrapy.Spider):
         l.add_xpath("title", '(//div[@id="lpname"]/div)[1]/text()',MapCompose(lambda x: self.spc_reg.sub("",x)),Join('-'))
         l.add_xpath("price", '//*[text() ="万"]//text()',Join())
         l.add_xpath("address", '//a[@id="agantesfxq_C03_05"]/text()')
-        l.add_value("district", response.meta.get("district"))
-        l.add_value("subdistrict", response.meta.get("subdistrict"))
+        l.add_value("dist_name", response.meta.get("dist_name"))
+        l.add_value("subdist_name", response.meta.get("subdist_name"))
         l.add_value("url",response.url)
 
         l.add_value("source", response.meta.get("source_url"))
@@ -339,15 +339,15 @@ class FangSpider(scrapy.Spider):
 
     def get_subdist_urls_newhouse(self, response):
         subdist_urls = response.xpath('(//li[@id=""])[1]/a')
-        district = response.meta.get("district")
+        district = response.meta.get("dist_name")
         for subdist_url in subdist_urls:
             subdistrict = subdist_url.xpath('./text()').extract_first()
             url =  response.urljoin(urlparse(subdist_url.xpath('./@href').extract_first()).path)
             l = ItemLoader(item=DistrictItem())
             l.default_output_processor = TakeFirst()
             l.add_value("url", url)
-            l.add_value("district", district)
-            l.add_value("subdistrict", subdistrict)
+            l.add_value("dist_name", district)
+            l.add_value("subdist_name", subdistrict)
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -357,11 +357,11 @@ class FangSpider(scrapy.Spider):
 
             yield l.load_item()
             yield Request(url, callback=self.parse_index_newhouse, meta=
-                {"district":district,"subdistrict": subdistrict})
+                {"dist_name":district,"subdist_name": subdistrict})
 
     def parse_index_newhouse(self, response):
-        district = response.meta.get("district")
-        subdistrict = response.meta.get("subdistrict")
+        district = response.meta.get("dist_name")
+        subdistrict = response.meta.get("subdist_name")
         self.logger.info("starting parse new house: %s", response.url)
         last_page = urlparse(response.xpath('//a[text()="尾页"]/@href').extract_first()).path
         if last_page:
@@ -382,7 +382,7 @@ class FangSpider(scrapy.Spider):
 
                 yield l.load_item()
                 yield Request(url, callback=self.parse_item_newhouse,
-                              meta={"district":district,"subdistrict":subdistrict})
+                              meta={"dist_name":district,"subdist_name":subdistrict})
         else:
             l = ItemLoader(item=IndexItem())
             l.default_output_processor = TakeFirst()
@@ -398,14 +398,14 @@ class FangSpider(scrapy.Spider):
 
             yield l.load_item()
             yield Request(url, callback=self.parse_item_newhouse,
-                          meta={"district": district, "subdistrict": subdistrict})
+                          meta={"dist_name": district, "subdist_name": subdistrict})
 
         self.update_index_page(response)
 
     def parse_item_newhouse(self, response):
         print("parse new house <%s>" %response.url)
         for div in response.xpath('//div[@id="newhouse_loupai_list"]//div[@class="clearfix"]'):
-            l = ItemLoader(item=ScrapeItem(), selector=div)
+            l = ItemLoader(item=PropertyItem(), selector=div)
             l.default_output_processor=TakeFirst()
             url = urljoin(response.url,urlparse(div.xpath('(.//a)[1]/@href').extract()).path)
             l.add_xpath("title", '(.//a)[2]//text()',
@@ -414,8 +414,8 @@ class FangSpider(scrapy.Spider):
                         MapCompose(lambda x: self.spc_reg.sub("",x)),Join())
             l.add_xpath("address",'.//div[@class="address"]//text()',
                         MapCompose(lambda x: self.spc_reg.sub("", x)), Join("-"))
-            l.add_value("district", response.meta.get("district"))
-            l.add_value("subdistrict", response.meta.get("subdistrict"))
+            l.add_value("dist_name", response.meta.get("dist_name"))
+            l.add_value("subdist_name", response.meta.get("subdist_name"))
             l.add_value("url", url)
 
             l.add_value("source", response.url)

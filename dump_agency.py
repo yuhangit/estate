@@ -8,7 +8,7 @@ csvWriter = csv.writer(f, dialect="excel", delimiter="\t")
 with sqlite3.connect("data/esf_urls.db") as cnx:
     cursor = cnx.cursor()
     cursor.execute("""
-        with t1 as (select *  from agencies where district ='昆山' and name is not null),
+        with t1 as (select *  from agencies where dist_name ='昆山' and name is not null),
         t2 as(select telephone,count(*) as cnt
               from t1
               GROUP BY telephone
@@ -38,7 +38,7 @@ with sqlite3.connect("data/esf_urls.db") as cnx:
     cursor.execute("""
       select telephone
       from main.agencies 
-      where instr(source,'.fang.com') >0 and district ='上海周边' and subdistrict= '昆山'
+      where instr(source,'.fang.com') >0 and dist_name ='上海周边' and subdist_name= '昆山'
       ORDER BY second_house_amount DESC 
       LIMIT 25
 """)

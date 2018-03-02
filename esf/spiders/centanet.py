@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from esf.items import ScrapeItem, IndexItem, DistrictItem
+from esf.items import PropertyItem, IndexItem, DistrictItem
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose,Join,TakeFirst
 from scrapy.linkextractors import LinkExtractor
@@ -51,7 +51,7 @@ class CentanetScrapeSpider(scrapy.Spider):
         subdistrict = response.xpath('(//span[@class="curr"])[2]/text()').extract_first()
 
         for div in response.xpath('//div[@class="house-listBox"]/div'):
-            l = ItemLoader(item=ScrapeItem(), selector=div)
+            l = ItemLoader(item=PropertyItem(), selector=div)
             l.default_output_processor = TakeFirst()
             l.add_xpath("title",'(.//a)[2]/text()', MapCompose(lambda x: self.spc_reg.sub("",x)))
             l.add_xpath("url","(.//a)[2]/@href",
@@ -59,8 +59,8 @@ class CentanetScrapeSpider(scrapy.Spider):
             l.add_xpath("price", './/p[@class="price-nub cRed"]/text()',Join())
             l.add_xpath("address",'.//a[@class="f000 mr_10"]//text()',
                         MapCompose(lambda x: self.spc_reg.sub("",x)),Join())
-            l.add_value("district",district)
-            l.add_value("subdistrict",subdistrict)
+            l.add_value("dist_name",district)
+            l.add_value("subdist_name",subdistrict)
 
             # housekeeping
             l.add_value("source", response.url)
@@ -157,7 +157,7 @@ class CentanetAllScrapeScripe(scrapy.Spider):
     def parse(self, response):
         self.logger.info("start parese url %s" %response.url)
         for div in response.xpath('//div[@class="house-listBox"]/div'):
-            l = ItemLoader(item=ScrapeItem(), selector=div)
+            l = ItemLoader(item=PropertyItem(), selector=div)
             l.default_output_processor = TakeFirst()
             l.add_xpath("title", '(.//a)[2]/text()', MapCompose(lambda x: self.spc_reg.sub("",x)))
             l.add_xpath("url", "(.//a)[2]/@href",
@@ -166,9 +166,9 @@ class CentanetAllScrapeScripe(scrapy.Spider):
             l.add_xpath("address",'.//a[@class="f000 mr_10"]//text()',
                         MapCompose(lambda x: self.spc_reg.sub("",x)),Join())
 
-            l.add_xpath("district", './/p[@class="f7b mb_15"]/text()',Join(), MapCompose(lambda x: x.split("-")[0].strip()))
+            l.add_xpath("dist_name", './/p[@class="f7b mb_15"]/text()',Join(), MapCompose(lambda x: x.split("-")[0].strip()))
 
-            l.add_xpath("subdistrict",'.//p[@class="f7b mb_15"]/text()',Join(), MapCompose(lambda x: x.split("-")[1].split()[0]))
+            l.add_xpath("subdist_name",'.//p[@class="f7b mb_15"]/text()',Join(), MapCompose(lambda x: x.split("-")[1].split()[0]))
 
             # housekeeping
             l.add_value("source", response.url)
@@ -242,7 +242,7 @@ class CentanetSpider(scrapy.Spider):
         for dist_url in dist_urls:
             url = response.urljoin(dist_url.xpath('./@href').extract())
             distinct = dist_url.xpath('./text()').extract()
-            yield Request(url, callback=self.get_subdist_urls, meta={"district":distinct})
+            yield Request(url, callback=self.get_subdist_urls, meta={"dist_name":distinct})
 
     def get_subdist_urls(self, response):
         subdist_urls = response.xpath('//p[@id="PanelBlock"]//a[not(text() = "不限")]')
@@ -252,8 +252,8 @@ class CentanetSpider(scrapy.Spider):
 
             l = ItemLoader(item=DistrictItem())
             l.add_value("url",url)
-            l.add_value("district", response.meta.get("district"))
-            l.add_value("subdistrict", subdistinct)
+            l.add_value("dist_name", response.meta.get("dist_name"))
+            l.add_value("subdist_name", subdistinct)
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
@@ -315,7 +315,7 @@ class CentanetSpider(scrapy.Spider):
         subdistrict = response.xpath('(//div[@class="_23XzT"]//text())[2]').extract_first().strip().replace("\"", "")
 
         for div in response.xpath('//ul[@class=""]/li'):
-            l = ItemLoader(item=ScrapeItem(), selector=div)
+            l = ItemLoader(item=PropertyItem(), selector=div)
             l.default_output_processor = TakeFirst()
             l.add_xpath("title", '(.//a)[1]//text()', MapCompose(lambda x: self.spc_reg.sub("", x)))
             l.add_xpath("url", "(.//a)[1]//@href",
@@ -323,8 +323,8 @@ class CentanetSpider(scrapy.Spider):
             l.add_xpath("price", './/span[text() = "万"]/..//text()', Join())
             l.add_xpath("address", './/span[@class="_13KXy"]//text()',
                         MapCompose(lambda x: self.spc_reg.sub("", x)), Join('-'))
-            l.add_value("district", district)
-            l.add_value("subdistrict", subdistrict)
+            l.add_value("dist_name", district)
+            l.add_value("subdist_name", subdistrict)
 
             # housekeeping
             l.add_value("source", response.url)

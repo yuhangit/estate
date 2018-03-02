@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from esf.items import ScrapeItem,IndexItem,AgentItem
+from esf.items import PropertyItem,IndexItem,AgentItem
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose,Join,TakeFirst
 from scrapy.linkextractors import LinkExtractor
@@ -20,6 +20,11 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
     name = 'KunShanAllScrapeSpider'
     spc_reg = re.compile(r"\s+")
 
+    city_name = "上海"
+    dist_name = "昆山"
+    category = "二手房"
+    station_name = "昆山视窗"
+
     rules = (Rule(LinkExtractor(restrict_xpaths='//div[@class="page"]')),
              Rule(LinkExtractor(restrict_xpaths='//ul[@id="xylist"]/li//a'), callback="parse_item")
              )
@@ -36,8 +41,12 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         l.add_xpath("address", '//div[@class="xflilist"]/div[3]//text()',
                     re = r'：(\w+)')
         l.add_xpath("register_date", '//div[@class="jbfx"]/text()', re=r'登记日期：([\d/]+)')
-        l.add_value("district", "昆山")
-        l.add_xpath("subdistrict",'(//div[@class="xx_xq_l200"])[2]/text()', re='区域：(?:昆山)?(\\w+)')
+
+        l.add_value("city_name", self.city_name)
+        l.add_value("dist_name", self.dist_name)
+        l.add_value("category", self.category)
+        l.add_value("station_name", self.station_name)
+        l.add_xpath("subdist_name",'(//div[@class="xx_xq_l200"])[2]/text()', re='区域：(?:昆山)?(\\w+)')
 
         # housekeeping
         l.add_value("source", response.url)
@@ -48,7 +57,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         yield l.load_item()
 
         # properties table
-        l = ItemLoader(item=ScrapeItem(), response=response)
+        l = ItemLoader(item=PropertyItem(), response=response)
         l.default_output_processor = TakeFirst()
         l.add_xpath('title', '//div[@class="xxview_title"]/text()')
         l.add_value("url", response.url)
@@ -56,16 +65,18 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
                              'sthuangs stb starial"]/text()')
         l.add_xpath("address",'//div[@class="wydzleft"]/text()', MapCompose(lambda x: x.strip()),
                     re=r'物业地址：([^\x01-\x1f]+)')
-        l.add_value("district", "昆山")
-        l.add_xpath("subdistrict", '(//div[@class="xx_xq_l200"])[2]/text()', re='区域：(?:昆山)?(\\w+)')
         l.add_xpath("agent_name", '//div[@class="sthys3"]/text()', re=r"：(\w+)")
         l.item.setdefault("agent_company", None)
         l.add_xpath("agent_company", '//li[@class="st14 stb starial"]//text()')
         l.add_xpath('agent_phone','//div[@class="sttelct2 sttelct"]/text()',
                     MapCompose(lambda x: "".join(x.split())))
-        l.add_value('source_name', "昆山视窗")
-        l.add_value("category", "secondhose")
         l.add_xpath("recent_activation", '//div[@class="fyfbtime"]/text()', re = '查看人次：(\\d+)')
+
+        l.add_value("city_name", self.city_name)
+        l.add_value("dist_name", self.dist_name)
+        l.add_value('station_name', self.station_name)
+        l.add_value("category", self.category)
+        l.add_xpath("subdist_name", '(//div[@class="xx_xq_l200"])[2]/text()', re='区域：(?:昆山)?(\\w+)')
 
         # housekeeping
         l.add_value("source", response.request.url)
@@ -82,10 +93,10 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         # 刷新被服务器防火墙屏蔽的网页, SkipExistUrl
         with pymysql.connect(**db_para) as cnx:
             cursor = cnx.cursor()
-            cnt = cursor.execute("DELETE from estate.agencies where name is null and district ='昆山'")
-            self.logger.info("delete %s from estate.agencies where name is null and district = '昆山'", cnt)
-            cnt = cursor.execute("DELETE from estate.properties where source_name = '昆山视窗' and name is NULL ")
-            self.logger.info("delete %s from estate.properties source_name = '昆山视窗' and name is NULL ", cnt)
+            cnt = cursor.execute("DELETE from estate.agencies where name is null and dist_name ='昆山'")
+            self.logger.info("delete %s from estate.agencies where name is null and dist_name = '昆山'", cnt)
+            cnt = cursor.execute("DELETE from estate.properties where station_name = '昆山视窗' and name is NULL ")
+            self.logger.info("delete %s from estate.properties station_name = '昆山视窗' and name is NULL ", cnt)
             cnx.commit()
 
         for url in self.start_urls:
@@ -106,7 +117,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
     # def parse(self, response):
     #     self.logger.info("start parese url %s" %response.url)
     #     for div in response.xpath('//ul[@id="xylist"]/li[@class="listzwt"]'):
-    #         l = ItemLoader(item=ScrapeItem(), selector=div)
+    #         l = ItemLoader(item=PropertyItem(), selector=div)
     #         l.default_output_processor = TakeFirst()
     #         l.add_xpath("title",'./div[@class="xlist_1"]/a/text()', MapCompose(lambda x: self.spc_reg.sub("",x)), Join())
     #         l.add_xpath("url",'./div[@class="xlist_1"]/a/@href',
@@ -115,9 +126,9 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
     #         l.add_xpath("address",'./div[@class="xlist_1"]/a/text()',
     #                     MapCompose(lambda x: self.spc_reg.sub("", x)),Join())
     #
-    #         l.add_value("district", "昆山")
+    #         l.add_value("dist_name", "昆山")
     #
-    #         l.add_xpath("subdistrict",'./div[@class="xlist_2"]/text()')
+    #         l.add_xpath("subdist_name",'./div[@class="xlist_2"]/text()')
     #
     #         # housekeeping
     #         l.add_value("source", response.url)

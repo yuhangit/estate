@@ -30,10 +30,10 @@ class AgentDistrictSpider(scrapy.Spider):
     def fresh_urls(self):
         with sqlite3.connect("data/esf_urls_test.db") as cnx:
             cursor = cnx.cursor()
-            cursor.execute("select DISTINCT source from district where subdistrict = 'nodef' and category = '?'",
+            cursor.execute("select DISTINCT source from district_rel where subdist_name = 'nodef' and category = '?'",
                            [self.category])
             urls = cursor.fetchall()
-            cursor.executemany("DELETE from district where source = ?",urls)
+            cursor.executemany("DELETE from district_rel where source = ?", urls)
             return [r[0] for r in urls]
 
     def parse(self, response):
@@ -47,31 +47,31 @@ class AgentDistrictSpider(scrapy.Spider):
         ###  得到区域列表
         # 5a5j
         if not district_urls:
-            self.logger.info("5a5j district ...")
+            self.logger.info("5a5j dist_name ...")
             district_urls = response.xpath('(//*[text()="全部"])[1]//ancestor::ul[1]//a[not(.//text()="全部")]')
         # lianjia
         if not district_urls:
-            self.logger.info("lianjia district ...")
+            self.logger.info("lianjia dist_name ...")
             district_urls = response.xpath('(//*[text()="不限"])[1]//ancestor::div[@class="option-list"]//a[not(text()="不限")]')
         # ganji
         if not district_urls:
-            self.logger.info("ganji/fangdd_esf/qfang/netease district ...")
+            self.logger.info("ganji/fangdd_esf/qfang/netease dist_name ...")
             district_urls = response.xpath('(//*[text()="不限"])[1]//ancestor::ul//a[not(text()="不限")]')
         # 58 商铺
         if not district_urls:
-            self.logger.info("58 district ...")
+            self.logger.info("58 dist_name ...")
             district_urls = response.xpath('//*[contains(text(),"全上海")]//..//a[not(contains(text(),"全上海"))]')
         # 安居客
         if not district_urls:
-            self.logger.info("anjuke district ...")
+            self.logger.info("anjuke dist_name ...")
             district_urls = response.xpath('(//*[text()="全部"])[1]//ancestor::span[@class="elems-l"]//a[not(.//text()="全部")]')
         # fang
         if not district_urls:
-            self.logger.info("fang district ...")
+            self.logger.info("fang dist_name ...")
             district_urls = response.xpath('(//*[text()="不限"])[1]//ancestor::div[@class="qxName"]//a[not(text()="不限")]')
         # centanet
         if not district_urls:
-            self.logger.info("centanet district ...")
+            self.logger.info("centanet dist_name ...")
             district_urls = response.xpath('(//*[text()="不限"])[1]//ancestor::p[@class="termcon fl"]//a[not(text()="不限")]')
         ###
 
@@ -80,8 +80,8 @@ class AgentDistrictSpider(scrapy.Spider):
             self.logger.error("!!!! url: %s not found any districts, checkout again this  !!!!", response.url)
             l = ItemLoader(item=DistrictItem())
             l.default_output_processor = TakeFirst()
-            l.add_value("district", "nodef")
-            l.add_value("subdistrict", "nodef")
+            l.add_value("dist_name", "nodef")
+            l.add_value("subdist_name", "nodef")
             l.add_value("url", response.url)
             l.add_value("category", self.category)
 
@@ -98,7 +98,7 @@ class AgentDistrictSpider(scrapy.Spider):
             district_name = "".join(url.xpath('.//text()').extract()).strip()
 
             yield Request(url=district_url, callback=self.parse_subdistrict,
-                          meta={"district_name": district_name, "category": self.category})
+                          meta={"dist_name": district_name, "category": self.category})
 
     def parse_subdistrict(self, response):
         """
@@ -111,15 +111,15 @@ class AgentDistrictSpider(scrapy.Spider):
         subdistrict_urls = []
         # 5i5j
         if not subdistrict_urls:
-            self.logger.info("5a5j subdistrict ...")
+            self.logger.info("5a5j subdist_name ...")
             subdistrict_urls = response.xpath('//dd[@class="block"]//a')
         # lainjia
         if not subdistrict_urls:
-            self.logger.info("lianjian subdistrict ...")
+            self.logger.info("lianjian subdist_name ...")
             subdistrict_urls = response.xpath('(//*[text()="不限"])[2]//ancestor::div[@class="option-list sub-option-list"]//a[not(text()="不限")]')
         #anjuke
         if not subdistrict_urls:
-            self.logger.info("anjuke subdistrict ...")
+            self.logger.info("anjuke subdist_name ...")
             subdistrict_urls = response.xpath('(//*[text()="全部"])[2]//ancestor::div[@class="sub-items"]//a[not(.//text()="全部")]')
         # qfang
         if not subdistrict_urls:
@@ -127,17 +127,17 @@ class AgentDistrictSpider(scrapy.Spider):
             subdistrict_urls = response.xpath('(//*[text()="不限"])[2]//ancestor::ul//a[not(text()="不限")]')
         # ganji
         if not subdistrict_urls:
-            self.logger.info("ganji subdistrict ...")
+            self.logger.info("ganji subdist_name ...")
             subdistrict_urls = response.xpath('(//*[text()="不限"])[2]//ancestor::div[@class="fou-list f-clear"]//a[not(text()="不限")]')
         if not subdistrict_urls:
-            self.logger.info("fang subdistrict ...")
+            self.logger.info("fang subdist_name ...")
             subdistrict_urls = response.xpath('//p[@id="shangQuancontain"]//a[not(text()="不限")]')
         if not subdistrict_urls:
-            self.logger.info("centanet subdistrict ...")
+            self.logger.info("centanet subdist_name ...")
             subdistrict_urls = response.xpath('(//*[text()="不限"])[2]//ancestor::p[@class="subterm fl"]//a[not(text()="不限")]')
         ###
         ##
-        district = response.meta.get("district_name")
+        district = response.meta.get("dist_name")
         category = response.meta.get("category")
 
         ### 若子区域列表为空 插入一条subdistrict 为nodef的数据.
@@ -145,8 +145,8 @@ class AgentDistrictSpider(scrapy.Spider):
             self.logger.critical("!!!! url: <%s> not  found any sub_districts, checkout again  !!!!", response.url)
             l = ItemLoader(item=DistrictItem())
             l.default_output_processor = TakeFirst()
-            l.add_value("district", district)
-            l.add_value("subdistrict", "nodef")
+            l.add_value("dist_name", district)
+            l.add_value("subdist_name", "nodef")
             l.add_value("url", response.url)
             l.add_value("category", category)
 
@@ -164,8 +164,8 @@ class AgentDistrictSpider(scrapy.Spider):
 
             l = ItemLoader(item=DistrictItem(), selector=url)
             l.default_output_processor = TakeFirst()
-            l.add_value("district", district)
-            l.add_value("subdistrict", subdistrict)
+            l.add_value("dist_name", district)
+            l.add_value("subdist_name", subdistrict)
             l.add_value("url", subdistrict_url)
             l.add_value("category", category)
 
@@ -176,7 +176,7 @@ class AgentDistrictSpider(scrapy.Spider):
             l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
             yield l.load_item()
-            meta = {"district":district,"subdistrict":subdistrict,"category":category}
+            meta = {"dist_name":district,"subdist_name":subdistrict,"category":category}
 
 
 class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
@@ -199,12 +199,12 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
     def start_requests(self):
         with sqlite3.connect(get_project_settings().get("STORE_DATABASE")) as cnx:
             cursor = cnx.cursor()
-            cursor.execute("select district,subdistrict,url from main.district "
-                           "where instr(source, '.fang.com') > 0 and category = ?",[self.category])
+            cursor.execute("select dist_name,subdist_name,url from main.dist_name "
+                           "where instr(source, '.fang.com') > 0 and category = ?", [self.category])
             url_infos = cursor.fetchall()
 
         for url_info in url_infos:
-            meta = {"district":url_info[0],"subdistrict":url_info[1]}
+            meta = {"dist_name":url_info[0],"subdist_name":url_info[1]}
             yield Request(url=url_info[2],meta=meta)
 
     def parse_start_url(self, response):
@@ -273,8 +273,8 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l = ItemLoader(item=AgentItem(), selector=li)
             l.default_output_processor = TakeFirst()
             l.add_xpath("name", './/div[@class="agent-name"]//h2/text()')
-            l.add_xpath("district",'.//div[@class="main-plate"]//a[1]/text()', MapCompose(lambda x: x.strip()))
-            l.add_xpath("subdistrict",'.//div[@class="main-plate"]//a[2]/text()', MapCompose(lambda x: x.strip()))
+            l.add_xpath("dist_name",'.//div[@class="main-plate"]//a[1]/text()', MapCompose(lambda x: x.strip()))
+            l.add_xpath("subdist_name",'.//div[@class="main-plate"]//a[2]/text()', MapCompose(lambda x: x.strip()))
             l.add_xpath("telephone",'.//p[@class="mobile_p"]/text()')
             l.add_xpath("history_amount",'.//span[@class="LOGCLICKEVTID"]/text()',
                         MapCompose(lambda x: int(x)), re = r"\d+")
@@ -301,8 +301,8 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.add_xpath("address", './/p[@class="jjr-desc"]/a[2]/text()')
             l.add_xpath("telephone", './/div[@class="jjr-side"]/text()'
                         ,MapCompose(lambda x: int(x)),re = r"\d+")
-            l.add_xpath("district",'(//span[@class="elems-l"]//a[@class="selected-item"])[1]//text()')
-            l.add_xpath("subdistrict",'(//span[@class="elems-l"]//a[@class="selected-item"])[2]//text()')
+            l.add_xpath("dist_name",'(//span[@class="elems-l"]//a[@class="selected-item"])[1]//text()')
+            l.add_xpath("subdist_name",'(//span[@class="elems-l"]//a[@class="selected-item"])[2]//text()')
 
             # housekeeping
             l.add_value("source", response.url)
@@ -320,8 +320,8 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l = ItemLoader(item=AgentItem(), selector=li)
             l.default_output_processor = TakeFirst()
             l.add_xpath("name",'//p[@class="name fl"]//a/text()')
-            l.add_xpath("district", './/span[@class="con fl"]/b[1]/text()')
-            l.add_xpath("subdistrict",'.//span[@class="con fl"]/b[2]/text()')
+            l.add_xpath("dist_name", './/span[@class="con fl"]/b[1]/text()')
+            l.add_xpath("subdist_name",'.//span[@class="con fl"]/b[2]/text()')
             l.add_xpath("telephone", './/div[@class="broker-tel fr"]/p/text()',
                         MapCompose(lambda x: int(x)), re = r"\d+")
             l.add_xpath("history_amount", './/span[@class="con fl"]/em/text()')
@@ -343,8 +343,8 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.default_output_processor = TakeFirst()
             l.add_xpath("name", './/p[@class="phone"]/b/@zvalue',
                         re=r"cnName:'(\w+)'")
-            l.add_xpath("district", '(//span[@class="curr"])[1]/text()')
-            l.add_xpath("subdistrict", '(//span[@class="curr"])[2]/text()')
+            l.add_xpath("dist_name", '(//span[@class="curr"])[1]/text()')
+            l.add_xpath("subdist_name", '(//span[@class="curr"])[2]/text()')
             l.add_xpath("company",'.//h2//@title')
             l.add_xpath("address", './/p[@class="xi"]//@title',
                         Join('-'))
@@ -373,8 +373,8 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.add_xpath("address", './/span[@class="bi-text broker-xiaoqu"]//text()'
                         ,MapCompose(lambda x:x.strip()),Join())
             l.add_xpath("telephone", './/p[@class="tel"]/text()', MapCompose(lambda x: int(x)))
-            l.add_xpath("district", '//ul[@class="f-clear"]/li[@class="item current"]//text()')
-            l.add_xpath("subdistrict",'//a[@class="subway-item current"]//text()')
+            l.add_xpath("dist_name", '//ul[@class="f-clear"]/li[@class="item current"]//text()')
+            l.add_xpath("subdist_name",'//a[@class="subway-item current"]//text()')
             l.add_xpath("company", '//span[@class="bi-text broker-company"]/text()')
             # housekeeping
             l.add_value("source", response.url)
@@ -396,8 +396,8 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
                         MapCompose(lambda x: int(x)), re=r"\d+")
             l.add_xpath("company", '//li[@link]//p[@class="f14 liaxni"]/span[2]/text()',Join(','),
                         re=r"\w+")
-            l.add_xpath("district",'(//a[@class="orange"])[1]//text()')
-            l.add_xpath("subdistrict",'(//a[@class="orange"])[2]//text()')
+            l.add_xpath("dist_name",'(//a[@class="orange"])[1]//text()')
+            l.add_xpath("subdist_name",'(//a[@class="orange"])[2]//text()')
             l.add_xpath("second_house_amount", './/b[@class="ml03"]', re=r"(\d+)套")
 
             # housekeeping
@@ -416,9 +416,9 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l = ItemLoader(item=AgentItem(), selector=div)
             l.default_output_processor = TakeFirst()
             l.add_xpath("name",'.//h3/text()')
-            l.add_xpath("district", '//li[@class="new_di_tab_cur"]//text()',
+            l.add_xpath("dist_name", '//li[@class="new_di_tab_cur"]//text()',
                         MapCompose(lambda x:x.strip()), Join())
-            l.add_xpath("subdistrict", '//dd//a[@class="cur"]//text()',
+            l.add_xpath("subdist_name", '//dd//a[@class="cur"]//text()',
                         MapCompose(lambda x: x.strip()), Join())
             l.add_xpath("address", './/p[@class="iconsleft"]//text()',Join())
             l.add_xpath("telephone",'.//div[@class="contacty"]/span/text()',
@@ -505,7 +505,7 @@ class TestFormSpider(scrapy.spiders.Spider):
 
         recent_activation = response.xpath('//p[@class="f333"]/span[@class="f666"][1]/text()').re(r"\d+")
 
-        meta = {"title":title, "district":district, "subdistrict":subdistrict,
+        meta = {"title":title, "dist_name":district, "subdist_name":subdistrict,
                 "agent_name":agent_name,"recent_activation":recent_activation}
         yield FormRequest(url=self.api_url, formdata=formdata,method="GET", meta=meta,callback=self.parse_item)
 

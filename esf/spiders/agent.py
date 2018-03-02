@@ -97,8 +97,8 @@ class AgentSpider(scrapy.Spider):
             l = ItemLoader(item=AgentItem(), selector=li)
             l.default_output_processor = TakeFirst()
             l.add_xpath("name", './/div[@class="agent-name"]//h2/text()')
-            l.add_xpath("district",'.//div[@class="main-plate"]//a[1]/text()', MapCompose(lambda x: x.strip()))
-            l.add_xpath("subdistrict",'.//div[@class="main-plate"]//a[2]/text()', MapCompose(lambda x: x.strip()))
+            l.add_xpath("dist_name",'.//div[@class="main-plate"]//a[1]/text()', MapCompose(lambda x: x.strip()))
+            l.add_xpath("subdist_name",'.//div[@class="main-plate"]//a[2]/text()', MapCompose(lambda x: x.strip()))
             l.add_xpath("telephone",'.//p[@class="mobile_p"]/text()')
             l.add_xpath("history_amount",'.//span[@class="LOGCLICKEVTID"]/text()',
                         MapCompose(lambda x: int(x)), re = r"\d+")
@@ -120,8 +120,8 @@ class AgentSpider(scrapy.Spider):
             l = ItemLoader(item=AgentItem(), selector=div)
             l.default_output_processor = TakeFirst()
             l.add_xpath("name",".//h3/a/text()", Join())
-            l.add_xpath("district", './/p[@class="jjr-desc"]/a[1]/text()')
-            l.add_xpath("subdistrict", './/p[@class="jjr-desc"]/a[2]/text()')
+            l.add_xpath("dist_name", './/p[@class="jjr-desc"]/a[1]/text()')
+            l.add_xpath("subdist_name", './/p[@class="jjr-desc"]/a[2]/text()')
             l.add_xpath("telephone", './/div[@class="jjr-side"]/text()'
                         ,MapCompose(lambda x: int(x)),re = r"\d+")
 
@@ -140,8 +140,8 @@ class AgentSpider(scrapy.Spider):
             l = ItemLoader(item=AgentItem(), selector=li)
             l.default_output_processor = TakeFirst()
             l.add_xpath("name",'//p[@class="name fl"]//a/text()')
-            l.add_xpath("district", './/span[@class="con fl"]/b[1]/text()')
-            l.add_xpath("subdistrict",'.//span[@class="con fl"]/b[2]/text()')
+            l.add_xpath("dist_name", './/span[@class="con fl"]/b[1]/text()')
+            l.add_xpath("subdist_name",'.//span[@class="con fl"]/b[2]/text()')
             l.add_xpath("telephone", './/div[@class="broker-tel fr"]/p/text()',
                         MapCompose(lambda x: int(x)), re = r"\d+")
             l.add_xpath("history_amount", './/span[@class="con fl"]/em/text()')
@@ -162,8 +162,8 @@ class AgentSpider(scrapy.Spider):
             l.default_output_processor = TakeFirst()
             l.add_xpath("name", './/p[@class="phone"]/b/@zvalue',
                         re=r"cnName:'(\w+)'")
-            l.add_xpath("district",'.//h2//@title')
-            l.add_xpath("subdistrict", './/p[@class="xi"]//@title',
+            l.add_xpath("dist_name",'.//h2//@title')
+            l.add_xpath("subdist_name", './/p[@class="xi"]//@title',
                         Join('-'))
             l.add_xpath("telephone",'.//p[@class="phone"]/b/@zvalue'
                         ,re = r"mobile:'(\w+)'")
@@ -186,8 +186,8 @@ class AgentSpider(scrapy.Spider):
             l = ItemLoader(item=AgentItem(), selector=div)
             l.default_output_processor = TakeFirst()
             l.add_xpath("name", './/a[@class="broker-name"]/text()')
-            l.add_xpath("district", './/span[@class="bi-text"]/a[1]/text()')
-            l.add_xpath("subdistrict", './/span[@class="bi-text"]/a[2]/text()')
+            l.add_xpath("dist_name", './/span[@class="bi-text"]/a[1]/text()')
+            l.add_xpath("subdist_name", './/span[@class="bi-text"]/a[2]/text()')
             l.add_xpath("telephone", './/p[@class="tel"]/text()', MapCompose(lambda x: int(x)))
 
             # housekeeping
@@ -205,8 +205,8 @@ class AgentSpider(scrapy.Spider):
             l = ItemLoader(item=AgentItem(), selector=li)
             l.default_output_processor = TakeFirst()
             l.add_xpath("name", './/div[@class="ttop"]//a//text()')
-            l.add_xpath("district", './/span[@class="diqu"]/span[1]/text()')
-            l.add_xpath("subdistrict", './/span[@class="diqu"]/span[2]/text()')
+            l.add_xpath("dist_name", './/span[@class="diqu"]/span[1]/text()')
+            l.add_xpath("subdist_name", './/span[@class="diqu"]/span[2]/text()')
             l.add_xpath("telephone", './/div[@class="fl"]/p[1]/text()',
                         MapCompose(lambda x: int(x)), re=r"\d+")
             l.add_xpath("company", '//li[@link]//p[@class="f14 liaxni"]/span[2]/text()',Join(','),

@@ -7,7 +7,7 @@
 import sqlite3
 from scrapy.utils.project import get_project_settings as settings
 import logging
-from esf.items import IndexItem,ScrapeItem,DistrictItem, AgentItem
+from esf.items import IndexItem,PropertyItem,DistrictItem, AgentItem
 from twisted.internet import defer
 from twisted.enterprise import adbapi
 from scrapy.exceptions import NotConfigured
@@ -29,34 +29,34 @@ class SqlitePipeline(object):
             self.cursor.execute(stmt,(item.get("url"),item.get("retrived"),item.get("category"),item.get("source"),
                                       item.get("project"),item.get("server"),item.get("date"),item.get("spider")))
 
-        elif isinstance(item, ScrapeItem):
+        elif isinstance(item, PropertyItem):
 
-            stmt = '''insert into properties(title, url, price, address, district,
-                        subdistrict, dt, source, project, server,spider,agent_name,
-                        agent_company,agent_phone,source_name,category, recent_activation) 
+            stmt = '''insert into properties(title, url, price, address, dist_name,
+                        subdist_name, dt, source, project, server,spider,agent_name,
+                        agent_company,agent_phone,station_name,category, recent_activation) 
                       values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
             self.cursor.execute(stmt,(item.get("title"),item.get("url"),item.get("price"),
-                                      item.get("address"),item.get("district"),item.get("subdistrict")
+                                      item.get("address"),item.get("dist_name"),item.get("subdist_name")
                                       ,item.get("date"),item.get("source"), item.get("project")
                                       ,item.get("server"),item.get("spider"),
                                       item.get("agent_name"),item.get("agent_company"),item.get("agent_phone")
-                                      ,item.get("source_name"),item.get("category"),item.get("recent_activation")))
+                                      ,item.get("station_name"),item.get("category"),item.get("recent_activation")))
 
         elif isinstance(item, DistrictItem):
-            stmt = """insert into district (district, subdistrict, url,category,source, project, server, dt, spider)
+            stmt = """insert into district_rel (dist_name, subdist_name, url,category,source, project, server, dt, spider)
                         VALUES (?,?,?,?,?,?,?,?,?)
             """
-            self.cursor.execute(stmt, (item.get("district"), item.get("subdistrict"), item.get("url"),item.get("category")
+            self.cursor.execute(stmt, (item.get("dist_name"), item.get("subdist_name"), item.get("url"),item.get("category")
                                        ,item.get("source"),item.get("project"), item.get("server"), item.get("date")
                                        ,item.get("spider")))
 
         elif isinstance(item, AgentItem):
-            stmt = """insert into agencies(name,company,address, district,subdistrict, telephone, history_amount,recent_activation
+            stmt = """insert into agencies(name,company,address, dist_name,subdist_name, telephone, history_amount,recent_activation
                           ,new_house_amount,second_house_amount,rent_house_amount,register_date,source, project, server, dt, spider)
                       values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """
-            self.cursor.execute(stmt,(item.get("name"),item.get("company"),item.get("address") ,item.get("district")
-                                      ,item.get("subdistrict"),item.get("telephone"),
+            self.cursor.execute(stmt,(item.get("name"),item.get("company"),item.get("address") ,item.get("dist_name")
+                                      ,item.get("subdist_name"),item.get("telephone"),
                                       item.get("history_amount"),item.get("recent_activation"),
                                       item.get("new_house_amount"), item.get("second_house_amount"),item.get("rent_house_amount"),
                                       item.get("register_date"),
@@ -74,6 +74,7 @@ class SqlitePipeline(object):
     def close_spider(self, spider):
         self.cursor.close()
         self.cnx.close()
+
 
 class MysqlWriter(object):
     @classmethod
@@ -94,6 +95,8 @@ class MysqlWriter(object):
         self.dbpool = adbapi.ConnectionPool("pymysql", charset='utf8',
                                             use_unicode=True, connect_timeout=5,
                                             **conn_kwargs)
+        self.cnx = pymysql.connect(**conn_kwargs)
+
 
     def close_spider(self, spider):
         self.dbpool.close()
@@ -102,7 +105,8 @@ class MysqlWriter(object):
     def process_item(self, item, spider):
         logger = spider.logger
         try:
-            yield self.dbpool.runInteraction(self.do_insert, item)
+            ids = self.retrieve_id(spider, item)
+            yield self.dbpool.runInteraction(self.do_insert, item, ids)
         except pymysql.OperationalError:
             if self.report_connection_error:
                 logger.error("Can't connect to mysql:%s",self.mysql_url)
@@ -112,49 +116,60 @@ class MysqlWriter(object):
 
         defer.returnValue(item)
 
+    def retrieve_id(self, spider, item):
+        logger = spider.logger
+        category_id, station_id, district_id = None, None, None
+        try:
+            with self.cnx.cursor() as cursor:
+                category_sql = "select category_id from estate.category_rel where category_name = %s"
+                cursor.execute(category_sql, (item.get("category")))
+                category_id = cursor.fetchone()[0]
+
+                district_sql = "select district_id from estate.district_rel where city_name = %s and " \
+                               "dist_name = %s and subdist_name = %s"
+
+                cursor.execute(district_sql, (item.get("city_name"), item.get("dist_name"), item.get("subdist_name")))
+                district_id = cursor.fetchone()[0]
+
+                station_sql = "select station_id from estate.station_rel where station_name = %s"
+                cursor.execute(station_sql, (item.get("station_name")))
+                station_id = cursor.fetchone()[0]
+        except Exception as e:
+            logger.exception("error when retrieve id")
+
+        return category_id, district_id, station_id
+
     @staticmethod
-    def do_insert(tx,item):
+    def do_insert(tx, item, ids):
 
-        if isinstance(item, IndexItem):
-            stmt = '''
-                insert into index_pages(url, retrived, category,source, project, server, dt, spider) VALUES 
-                (%s,%s,%s,%s,%s,%s,%s,%s)
-            '''
-            tx.execute(stmt,
-                                (item.get("url"), item.get("retrived"), item.get("category"), item.get("source"),
-                                 item.get("project"), item.get("server"), item.get("date"), item.get("spider")))
+        if isinstance(item, PropertyItem):
 
-        elif isinstance(item, ScrapeItem):
-
-            stmt = '''insert into properties(title, url, price, address, district,
-                        subdistrict, dt, source, project, server,spider,agent_name,
-                        agent_company,agent_phone,source_name,category, recent_activation) 
-                      values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
-            tx.execute(stmt, (item.get("title"), item.get("url"), item.get("price"),
-                                       item.get("address"), item.get("district"), item.get("subdistrict")
-                                       , item.get("date"), item.get("source"), item.get("project")
-                                       , item.get("server"), item.get("spider"),
-                                       item.get("agent_name"), item.get("agent_company"), item.get("agent_phone")
-                                       , item.get("source_name"), item.get("category"),
-                                       item.get("recent_activation")))
+            stmt = '''insert into properties_temp(title, url, price, address, source, project, server, dt,
+                          spider, agent_name, agent_company, agent_phone, recent_activation, 
+                          district_id, station_id, category_id) 
+                      values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
+            tx.execute(stmt, (item.get("title"), item.get("url"), item.get("price"), item.get("address"),
+                              item.get("source"), item.get("project"), item.get("server"), item.get("dt"),
+                              item.get("spider"), item.get("agent_name"), item.get("agent_company"),
+                              item.get("agent_phone"), item.get("station_name"), ))
 
         elif isinstance(item, DistrictItem):
-            stmt = """insert into district (district, subdistrict, url,category,source, project, server, dt, spider)
+            stmt = """insert into district_rel (dist_name, subdist_name, url,category,source, project, server, dt, spider)
                         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """
             tx.execute(stmt, (
-            item.get("district"), item.get("subdistrict"), item.get("url"), item.get("category")
+            item.get("dist_name"), item.get("subdist_name"), item.get("url"), item.get("category")
             , item.get("source"), item.get("project"), item.get("server"), item.get("date")
             , item.get("spider")))
 
         elif isinstance(item, AgentItem):
-            stmt = """insert into agencies(name,company,address, district,subdistrict, telephone, history_amount,recent_activation
+            stmt = """insert into agencies_temp(name,company,address, dist_name,subdist_name, telephone, history_amount,recent_activation
                           ,new_house_amount,second_house_amount,rent_house_amount,register_date,source, project, server, dt, spider)
                       values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """
             tx.execute(stmt,
-                                (item.get("name"), item.get("company"), item.get("address"), item.get("district")
-                                 , item.get("subdistrict"), item.get("telephone"),
+                                (item.get("name"), item.get("company"), item.get("address"), item.get("dist_name")
+                                 , item.get("subdist_name"), item.get("telephone"),
                                  item.get("history_amount"), item.get("recent_activation"),
                                  item.get("new_house_amount"), item.get("second_house_amount"),
                                  item.get("rent_house_amount"),

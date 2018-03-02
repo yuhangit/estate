@@ -31,18 +31,18 @@ class DistrictItem(HouseKeepingItem):
     url = Field()
 
 
-
-class ScrapeItem(HouseKeepingItem):
+class PropertyItem(HouseKeepingItem):
     title = Field()
     url = Field()
     price = Field()
     address = Field()
-    district = Field()
-    subdistrict = Field()
+    city_name = Field()
+    dist_name = Field()
+    subdist_name = Field()
     agent_name = Field()
     agent_company = Field()
     agent_phone = Field()
-    source_name = Field()
+    station_name = Field()
     recent_activation = Field()
 
 

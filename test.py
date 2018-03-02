@@ -29,7 +29,7 @@ class BasicSpider:
         self.file = open(filename,"w")
         self.csvWriter = csv.writer(self.file,delimiter='\t')
 
-        # initial district urls
+        # initial dist_name urls
         self.lvl1_urls = set()
         self.lvl1_urls_retrived = set()
         self.lvl0_urls = set()
@@ -118,7 +118,7 @@ class BasicSpider:
         self.driver = driver
 
     def _get_start_urls(self,url):
-        # get first district level
+        # get first dist_name level
         self._sleep()
         self.driver.get(url)
         self._get_level0_urls()
