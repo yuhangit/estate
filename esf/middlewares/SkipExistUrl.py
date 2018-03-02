@@ -20,17 +20,20 @@ class SkipExistUrlMiddleware(object):
 
         conn_kwargs = self.__class__.parse_mysql_url(mysql_url)
         self.cnx = pymysql.connect(**conn_kwargs)
-        self.cursor = self.cnx.cursor()
+
+    def check_exists(self, url):
+        with self.cnx.cursor() as cursor:
+            cursor.execute("select count(*) from estate.properties_temp where url = %s", (url,))
+            if cursor.fetchone()[0] > 0:
+                return True
+            cursor.execute("select count(*) from estate.agencies_temp where source =%s", (url))
+            if cursor.fetchone()[0] > 0:
+                return True
+        return False
 
     def process_request(self, request, spider):
 
-        self.cursor.execute("select url from estate.properties")
-        properties_retrieved_urls = [r[0] for r in self.cursor.fetchall()]
-        self.cursor.execute("select source from estate.agencies")
-        agencies_retrieved_urls = [r[0] for r in self.cursor.fetchall()]
-        retried_urls = properties_retrieved_urls + agencies_retrieved_urls
-
-        if request.url in retried_urls:
+        if self.check_exists(request.url):
             raise IgnoreRequest("url <%s> has already processed" % request.url)
 
     @staticmethod
