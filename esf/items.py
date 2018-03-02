@@ -27,6 +27,7 @@ class HouseKeepingItem(scrapy.Item):
     city_name = Field()
     dist_name = Field()
     subdist_name = Field()
+    station_name = Field()
 
 class DistrictItem(HouseKeepingItem):
     district = Field()
@@ -43,7 +44,6 @@ class PropertyItem(HouseKeepingItem):
     agent_name = Field()
     agent_company = Field()
     agent_phone = Field()
-    station_name = Field()
     recent_activation = Field()
 
 
