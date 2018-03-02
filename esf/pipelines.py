@@ -95,7 +95,7 @@ class MysqlWriter(object):
         self.dbpool = adbapi.ConnectionPool("pymysql", charset='utf8',
                                             use_unicode=True, connect_timeout=5,
                                             **conn_kwargs)
-        self.cnx = pymysql.connect(**conn_kwargs)
+        self.cnx = pymysql.connect(**conn_kwargs,charset="utf8")
 
 
     def close_spider(self, spider):
