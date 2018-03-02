@@ -104,10 +104,10 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         with cnx.cursor() as cursor:
 
             cnt = cursor.execute("""DELETE from estate.agencies_temp 
-                                    where name is null and district_id in 
-                                        (select district_id 
-                                        from district_rel 
-                                        where dist_name = %s)""", (self.dist_name,))
+                                    where name is null and station_id in 
+                                        (select station_id
+                                        from station_rel
+                                        where station_name= %s) """, (self.station_name,))
 
             self.logger.info("delete %s from estate.agencies where name is null and dist_name = '%s'", cnt, self.dist_name,)
             cnt = cursor.execute("""DELETE from estate.properties_temp 

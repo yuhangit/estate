@@ -128,15 +128,15 @@ class MysqlWriter(object):
                 cursor.execute(category_sql, (item.get("category")))
                 category_id = cursor.fetchone()[0]
 
+                station_sql = "select station_id from estate.station_rel where station_name = %s"
+                cursor.execute(station_sql, (item.get("station_name")))
+                station_id = cursor.fetchone()[0]
+
                 district_sql = "select district_id from estate.district_rel where city_name = %s and " \
                                "dist_name = %s and subdist_name = %s"
 
                 cursor.execute(district_sql, (item.get("city_name"), item.get("dist_name"), item.get("subdist_name")))
                 district_id = cursor.fetchone()[0]
-
-                station_sql = "select station_id from estate.station_rel where station_name = %s"
-                cursor.execute(station_sql, (item.get("station_name")))
-                station_id = cursor.fetchone()[0]
         except Exception as e:
             logger.exception("error when retrieve id")
 
