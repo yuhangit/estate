@@ -20,7 +20,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
     name = 'KunShanAllScrapeSpider'
     spc_reg = re.compile(r"\s+")
 
-    city_name = "上海"
+    city_name = "上海周边"
     dist_name = "昆山"
     category = "二手房"
     station_name = "昆山视窗"
