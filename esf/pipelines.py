@@ -137,7 +137,7 @@ class MysqlWriter(object):
         except Exception as e:
             logger.exception("error when retrieve id")
 
-        return category_id, district_id, station_id
+        return {"category_id": category_id, "district_id": district_id, "station_id": station_id}
 
     @staticmethod
     def do_insert(tx, item, ids):
@@ -147,35 +147,34 @@ class MysqlWriter(object):
             stmt = '''insert into properties_temp(title, url, price, address, source, project, server, dt,
                           spider, agent_name, agent_company, agent_phone, recent_activation, 
                           district_id, station_id, category_id) 
-                      values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
+                      values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
             tx.execute(stmt, (item.get("title"), item.get("url"), item.get("price"), item.get("address"),
                               item.get("source"), item.get("project"), item.get("server"), item.get("dt"),
                               item.get("spider"), item.get("agent_name"), item.get("agent_company"),
-                              item.get("agent_phone"), item.get("station_name"), ))
+                              item.get("agent_phone"), item.get("station_name"), ids.get("district_id")
+                              , ids.get("station_id"), ids.get("category_id")))
 
         elif isinstance(item, DistrictItem):
-            stmt = """insert into district_rel (dist_name, subdist_name, url,category,source, project, server, dt, spider)
-                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            stmt = """update district_rel set url = %s
+                      where city_name = %s and dist_name = %s and  subdist_name = %s
             """
             tx.execute(stmt, (
-            item.get("dist_name"), item.get("subdist_name"), item.get("url"), item.get("category")
-            , item.get("source"), item.get("project"), item.get("server"), item.get("date")
-            , item.get("spider")))
+                item.get("url"), item.get("city_name"), item.get("dist_name"), item.get("subdist_name")
+            ))
 
         elif isinstance(item, AgentItem):
-            stmt = """insert into agencies_temp(name,company,address, dist_name,subdist_name, telephone, history_amount,recent_activation
-                          ,new_house_amount,second_house_amount,rent_house_amount,register_date,source, project, server, dt, spider)
-                      values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            stmt = """insert into agencies_temp(name, telephone, history_amount, recent_activation, source, project,
+                          spider, server, dt, second_house_amount, new_house_amount, rent_house_amount, company, 
+                          address, register_date, district_id, station_id, category_id)
+                      values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """
-            tx.execute(stmt,
-                                (item.get("name"), item.get("company"), item.get("address"), item.get("dist_name")
-                                 , item.get("subdist_name"), item.get("telephone"),
-                                 item.get("history_amount"), item.get("recent_activation"),
-                                 item.get("new_house_amount"), item.get("second_house_amount"),
-                                 item.get("rent_house_amount"),
-                                 item.get("register_date"),
-                                 item.get("source"), item.get("project"), item.get("server"), item.get("date"),
-                                 item.get("spider")))
+            tx.execute(stmt, (
+                item.get("name"), item.get("telephone"), item.get("history_amount"), item.get("recent_activation")
+                , item.get("source"), item.get("project"), item.get("spider"), item.get("server"), item.get("dt"),
+                item.get("second_house_amount"), item.get("new_house_amount"), item.get("recent_house_amount"),
+                item.get("company"), item.get("address"), item.get("register_date"), ids.get("district_id"),
+                ids.get("station_id"), ids.get("category_id")
+            ))
 
     @staticmethod
     def parse_mysql_url(mysql_url):

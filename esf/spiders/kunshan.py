@@ -53,7 +53,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         l.add_value("project", self.settings.get("BOT_NAME"))
         l.add_value("spider", self.name)
         l.add_value("server", socket.gethostname())
-        l.add_value("date", datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+        l.add_value("date", datetime.datetime.utcnow())
         yield l.load_item()
 
         # properties table
@@ -83,7 +83,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         l.add_value("project", self.settings.get("BOT_NAME"))
         l.add_value("spider", self.name)
         l.add_value("server", socket.gethostname())
-        l.add_value("date", datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+        l.add_value("date", datetime.datetime.utcnow())
         yield l.load_item()
 
     def start_requests(self):
@@ -91,12 +91,20 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         self.logger.critical("refresh urls ....")
         db_para = self.__class__.parse_mysql_url(get_project_settings().get("MYSQL_PIPELINE_URL"))
         # 刷新被服务器防火墙屏蔽的网页, SkipExistUrl
-        with pymysql.connect(**db_para) as cnx:
-            cursor = cnx.cursor()
-            cnt = cursor.execute("DELETE from estate.agencies where name is null and dist_name ='昆山'")
-            self.logger.info("delete %s from estate.agencies where name is null and dist_name = '昆山'", cnt)
-            cnt = cursor.execute("DELETE from estate.properties where station_name = '昆山视窗' and name is NULL ")
-            self.logger.info("delete %s from estate.properties station_name = '昆山视窗' and name is NULL ", cnt)
+        cnx = pymysql.connect(**db_para)
+        with cnx.cursor() as cursor:
+
+            cnt = cursor.execute("""DELETE from estate.agencies_temp 
+                                    where name is null and district_id in 
+                                        (select district_id 
+                                        from district_rel 
+                                        where dist_name = %s)""", (self.dist_name,))
+
+            self.logger.info("delete %s from estate.agencies where name is null and dist_name = '%s'", cnt, self.dist_name,)
+            cnt = cursor.execute("""DELETE from estate.properties_temp 
+                                    where agent_name is null and station_id in 
+                                      (select station_id from station_rel where station_name = %s) """, (self.station_name, ))
+            self.logger.info("delete %s from estate.properties station_name = '%s' and name is NULL ", cnt, self.station_name)
             cnx.commit()
 
         for url in self.start_urls:

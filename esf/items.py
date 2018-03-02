@@ -22,8 +22,11 @@ class HouseKeepingItem(scrapy.Item):
     spider = Field()
     project = Field()
     server = Field()
-    category = Field()
 
+    category = Field()
+    city_name = Field()
+    dist_name = Field()
+    subdist_name = Field()
 
 class DistrictItem(HouseKeepingItem):
     district = Field()
@@ -36,9 +39,7 @@ class PropertyItem(HouseKeepingItem):
     url = Field()
     price = Field()
     address = Field()
-    city_name = Field()
-    dist_name = Field()
-    subdist_name = Field()
+
     agent_name = Field()
     agent_company = Field()
     agent_phone = Field()
@@ -53,8 +54,6 @@ class IndexItem(HouseKeepingItem):
 
 class AgentItem(HouseKeepingItem):
     name = Field()
-    district = Field()
-    subdistrict = Field()
     telephone = Field()
     history_amount = Field()
     recent_activation = Field()
