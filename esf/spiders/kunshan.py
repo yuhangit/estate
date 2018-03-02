@@ -50,19 +50,20 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         l.add_value("station_name", self.station_name)
         l.add_xpath("subdist_name", '(//div[@class="xx_xq_l200"])[2]/text()', re='区域：(?:昆山)?(\\w+)')
 
-        if not l.item.get("subdist_name"):
-            self.logger.critical("subdsitrict name is not scrape, save response as a file")
-            f = open("html_%s.html" % parse_qs(urlparse(response.url).query).get("id")[0])
-            f.write(response.url)
-            f.close()
-
         # housekeeping
         l.add_value("source", response.url)
         l.add_value("project", self.settings.get("BOT_NAME"))
         l.add_value("spider", self.name)
         l.add_value("server", socket.gethostname())
         l.add_value("date", datetime.datetime.utcnow())
-        yield l.load_item()
+        item = l.load_item()
+
+        if not item.get("subdist_name"):
+            self.logger.critical("subdsitrict name is not scrape, save response as a file")
+            f = open("html_%s.html" % parse_qs(urlparse(response.url).query).get("id")[0], 'w')
+            f.write(response.url)
+            f.close()
+        yield item
 
         # properties table
         l = ItemLoader(item=PropertyItem(), response=response)
