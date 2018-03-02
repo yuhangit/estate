@@ -46,7 +46,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         l.add_value("dist_name", self.dist_name)
         l.add_value("category", self.category)
         l.add_value("station_name", self.station_name)
-        l.add_xpath("subdist_name",'(//div[@class="xx_xq_l200"])[2]/text()', re='区域：(?:昆山)?(\\w+)')
+        l.add_xpath("subdist_name", '(//div[@class="xx_xq_l200"])[2]/text()', re='区域：(?:昆山)?(\\w+)')
 
         # housekeeping
         l.add_value("source", response.url)

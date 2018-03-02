@@ -29,6 +29,7 @@ class HouseKeepingItem(scrapy.Item):
     subdist_name = Field()
     station_name = Field()
 
+
 class DistrictItem(HouseKeepingItem):
     district = Field()
     subdistrict = Field()
