@@ -60,7 +60,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
 
         if not item.get("subdist_name"):
             self.logger.critical("subdsitrict name is not scrape, save response as a file")
-            f = open("html_%s.html" % parse_qs(urlparse(response.url).query).get("id")[0], 'w')
+            f = open("html_%s.html" % parse_qs(urlparse(response.url).query).get("id")[0], 'w', encoding='utf8')
             f.write(response.text)
             f.close()
         yield item
