@@ -8,6 +8,7 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.utils.project import get_project_settings
 from scrapy.http import Request
 import sqlite3
+from urllib.parse import urlparse,parse_qs
 import re
 import socket
 import datetime
@@ -47,6 +48,12 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         l.add_value("category", self.category)
         l.add_value("station_name", self.station_name)
         l.add_xpath("subdist_name", '(//div[@class="xx_xq_l200"])[2]/text()', re='区域：(?:昆山)?(\\w+)')
+
+        if not l.item.get("subdist_name"):
+            self.logger.critical("subdsitrict name is not scrape, save response as a file")
+            f = open("html_%s.html", parse_qs(urlparse(response.rul).query).get("id")[0])
+            f.write(response.url)
+            f.close()
 
         # housekeeping
         l.add_value("source", response.url)

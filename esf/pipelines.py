@@ -14,6 +14,7 @@ from scrapy.exceptions import NotConfigured
 import pymysql
 import dj_database_url
 import traceback
+from scrapy import signals
 
 
 class SqlitePipeline(object):
