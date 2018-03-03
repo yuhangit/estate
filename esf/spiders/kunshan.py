@@ -118,6 +118,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
                                       (select station_id from station_rel where station_name = %s) """, (self.station_name, ))
             self.logger.info("delete %s from estate.properties station_name = '%s' and name is NULL ", cnt, self.station_name)
             cnx.commit()
+        cnx.close()
 
         for url in self.start_urls:
             yield Request(url=url)
