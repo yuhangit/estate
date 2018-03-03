@@ -9,12 +9,6 @@ import scrapy
 from scrapy import Field
 
 
-class EsfItem(scrapy.Item):
-    pass
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-
-
 class HouseKeepingItem(scrapy.Item):
     # housekeeping
     dt = Field()
@@ -31,8 +25,6 @@ class HouseKeepingItem(scrapy.Item):
 
 
 class DistrictItem(HouseKeepingItem):
-    district = Field()
-    subdistrict = Field()
     url = Field()
 
 

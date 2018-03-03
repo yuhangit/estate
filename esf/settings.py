@@ -127,17 +127,22 @@ REQUESTS_HEADERS = {
 STORE_DATABASE = "data/esf_urls.db"
 
 
-CATEGORIES = {"agency":  ["https://sh.5i5j.com/jingjiren/n0/",  'https://sh.lianjia.com/jingjiren/', 'https://shanghai.anjuke.com/tycoon/',
+CATEGORIES = {"代理人":  ["https://sh.5i5j.com/jingjiren/n0/",  'https://sh.lianjia.com/jingjiren/', 'https://shanghai.anjuke.com/tycoon/',
                                      'http://shanghai.qfang.com/tycoon/o0', 'http://sh.ganji.com/fang/agent/', 'http://esf.sh.fang.com/agenthome/',
                                      'http://sh.centanet.com/jingjiren/'],
-                  "newhouse":['http://sh.centanet.com/xinfang/','http://newhouse.sh.fang.com/house/s/','http://sh.ganji.com/fang12/',
+                  "新房":['http://sh.centanet.com/xinfang/','http://newhouse.sh.fang.com/house/s/','http://sh.ganji.com/fang12/',
                               'http://shanghai.fangdd.com/loupan/','http://shanghai.qfang.com/newhouse/list',
                               'http://xf.house.163.com/sh/search/0-0-0-0-0-0-0-0-0-1-0-0-0-0-0-1-1-0-0-0-1.html',
                               ],
-                  "secondhouse":['http://sh.centanet.com/ershoufang/','http://esf.sh.fang.com/','http://sh.ganji.com/fang5/',
-                                'http://sh.58.com/ershoufang/pn1/', 'http://house.ks.js.cn/secondhand.asp', 'http://shanghai.fangdd.com/esf/',
-                                'http://shanghai.qfang.com/sale',],
-                  "shop":["http://shop.sh.fang.com/",'http://sh.ganji.com/fang7/','http://sh.58.com/shangpucs/pn1/',]
+                  "二手房":{'http://sh.centanet.com/ershoufang/':{"city_name":"上海","station_name":"中原地产"},
+                            'http://esf.sh.fang.com/':{"city_name":"上海", "station_name":"房天下"},
+                            'http://sh.ganji.com/fang5/':{"city_name":"上海", "station_name":"赶集网"},
+                            'http://sh.58.com/ershoufang/pn1/':{"city_name":"上海", "station_name":"58同城"},
+                            # 'http://house.ks.js.cn/secondhand.asp', #昆山视窗的单独爬取
+                            'http://shanghai.fangdd.com/esf/':{"city_name":"上海", "station_name":"房多多"},
+                            'http://shanghai.qfang.com/sale':{"city_name":"上海", "station_name":"Q房网"}
+                         },
+                  "商铺":["http://shop.sh.fang.com/",'http://sh.ganji.com/fang7/','http://sh.58.com/shangpucs/pn1/',]
                   }
 # update partial urls of not equal 0
 REFRESH_URLS = 0

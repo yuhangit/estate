@@ -26,7 +26,7 @@ class SkipExistUrlMiddleware(object):
             cursor.execute("select count(*) from estate.properties_temp where url = %s", (url,))
             if cursor.fetchone()[0] > 0:
                 return True
-            cursor.execute("select count(*) from estate.agencies_temp where source =%s", (url))
+            cursor.execute("select count(*) from estate.agencies_temp where source =%s", (url,))
             if cursor.fetchone()[0] > 0:
                 return True
         return False

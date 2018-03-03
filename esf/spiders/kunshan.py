@@ -27,9 +27,10 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
     category = "二手房"
     station_name = "昆山视窗"
 
-    rules = (Rule(LinkExtractor(restrict_xpaths='//div[@class="page"]')),
-             Rule(LinkExtractor(restrict_xpaths='//ul[@id="xylist"]/li//a'), callback="parse_item")
-             )
+    rules = (
+        Rule(LinkExtractor(restrict_xpaths='//div[@class="page"]')),
+        Rule(LinkExtractor(restrict_xpaths='//ul[@id="xylist"]/li//a'), callback="parse_item")
+    )
 
     def parse_item(self,response):
         # agency table

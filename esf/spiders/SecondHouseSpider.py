@@ -17,8 +17,12 @@ import re
 
 class SecondHouseDistrictSpider(scrapy.Spider):
     name = "SecondHouseDistrictSpider"
-    category = "secondhouse"
-    start_urls = get_project_settings().get("CATEGORIES")[category]
+    category = "二手房"
+
+    def start_requests(self):
+        start_urls = get_project_settings().get("CATEGORIES")[self.category]
+        for url, meta in start_urls.items():
+            yield Request(url=url, meta=meta)
 
     def parse(self, response):
         district = []
@@ -47,8 +51,8 @@ class SecondHouseDistrictSpider(scrapy.Spider):
             self.logger.error("!!!! url: %s not found any districts, checkout again this  !!!!", response.url)
             l = ItemLoader(item=DistrictItem())
             l.default_output_processor = TakeFirst()
-            l.add_value("dist_name", "nodef")
-            l.add_value("subdist_name", "nodef")
+            l.add_value("dist_name", None)
+            l.add_value("subdist_name", None)
             l.add_value("url", response.url)
             l.add_value("category", self.category)
 
@@ -56,18 +60,21 @@ class SecondHouseDistrictSpider(scrapy.Spider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("date", datetime.datetime.utcnow())
 
             yield l.load_item()
 
+        meta = response.meta
         for url in district:
             district_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
             district_name = "".join(url.xpath('.//text()').extract()).strip()
 
+            meta.update(dist_name = district_name)
             yield Request(url=district_url, callback=self.parse_subdistrict,
-                          meta={"dist_name": district_name, "category": self.category})
+                          meta=meta)
 
     def parse_subdistrict(self, response):
+
         subdistrict = []
 
         # centanet
@@ -101,22 +108,28 @@ class SecondHouseDistrictSpider(scrapy.Spider):
 
         district = response.meta.get("dist_name")
         category = response.meta.get("category")
+        station_name = response.meta.get("station_name")
+        city_name = response.meta.get("city_name")
 
         # exception handle
         if not subdistrict:
             self.logger.critical("!!!! url: <%s> not  found any sub_districts, checkout again  !!!!", response.url)
             l = ItemLoader(item=DistrictItem())
             l.default_output_processor = TakeFirst()
+
+            l.add_value("secondhouse_url", response.url)
+
             l.add_value("dist_name", district)
-            l.add_value("subdist_name", "nodef")
-            l.add_value("url", response.url)
+            l.add_value("subdist_name", None)
             l.add_value("category", category)
+            l.add_value("city_name", city_name)
+            l.add_value("station_name", station_name)
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("dt", datetime.datetime.utcnow())
 
             yield l.load_item()
 
@@ -126,23 +139,27 @@ class SecondHouseDistrictSpider(scrapy.Spider):
 
             l = ItemLoader(item=DistrictItem(), selector=url)
             l.default_output_processor = TakeFirst()
+            l.add_value("url", subdistrict_url)
+
             l.add_value("dist_name", district)
             l.add_value("subdist_name", subdistrict)
-            l.add_value("url", subdistrict_url)
             l.add_value("category", category)
+            l.add_value("station_name", station_name)
+            l.add_value("city_name", city_name)
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("dt", datetime.datetime.utcnow())
 
             yield l.load_item()
 
 
 class SecondHouseIndexPageSpider(scrapy.spiders.CrawlSpider):
     name = "SecondHouseIndexPageSpider"
-    category = "secondhouse"
+    category = "二手房"
+
     nextpage_xpaths = ['//div[@class="pagerbox"]' # centanet
                        ]
     items_xpaths = ['//a[@class="cBlueB"]' # centanet

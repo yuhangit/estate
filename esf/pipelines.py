@@ -98,29 +98,33 @@ class MysqlWriter(object):
                                             **conn_kwargs)
         self.cnx = pymysql.connect(**conn_kwargs,charset="utf8")
 
+    def open_spider(self, spider):
+        self.logger = spider.logger
+
     def close_spider(self, spider):
         self.dbpool.close()
         self.cnx.close()
 
     @defer.inlineCallbacks
     def process_item(self, item, spider):
-        logger = spider.logger
+
         try:
-            ids = self.retrieve_id(spider, item)
+            # used for update dedicated field in district_rel
+
+            ids = self.retrieve_id(item)
             yield self.dbpool.runInteraction(self.do_insert, item, ids)
         except pymysql.OperationalError:
             if self.report_connection_error:
-                logger.error("Can't connect to mysql:%s",self.mysql_url)
+                self.logger.error("Can't connect to mysql:%s",self.mysql_url)
                 self.report_connection_error = False
         except:
-            logger.exception(traceback.format_exc()+ "\n%s", item.get("url") or item.get("source") or "no url")
+            self.logger.exception(traceback.format_exc()+ "\n%s", item.get("url") or item.get("source") or "no url")
 
         defer.returnValue(item)
 
-    def retrieve_id(self, spider, item):
-        logger = spider.logger
+    def retrieve_id(self, item):
         category_id, station_id, district_id = None, None, None
-        logger.info("item contain: %s,%s,%s,%s,%s", item.get("category"), item.get("station_name"),
+        self.logger.info("item contain: %s,%s,%s,%s,%s", item.get("category"), item.get("station_name"),
                     item.get("city_name"), item.get("dist_name"), item.get("subdist_name"))
         try:
             with self.cnx.cursor() as cursor:
@@ -138,7 +142,7 @@ class MysqlWriter(object):
                 cursor.execute(district_sql, (item.get("city_name"), item.get("dist_name"), item.get("subdist_name")))
                 district_id = cursor.fetchone()[0]
         except Exception as e:
-            logger.exception("error when retrieve id")
+            self.logger.exception("error when retrieve id")
 
         return {"category_id": category_id, "district_id": district_id, "station_id": station_id}
 
@@ -158,12 +162,28 @@ class MysqlWriter(object):
                               , ids.get("station_id"), ids.get("category_id")))
 
         elif isinstance(item, DistrictItem):
-            stmt = """update district_rel set url = %s
-                      where city_name = %s and dist_name = %s and  subdist_name = %s
-            """
-            tx.execute(stmt, (
-                item.get("url"), item.get("city_name"), item.get("dist_name"), item.get("subdist_name")
-            ))
+            url_field = None
+            category = item.get("category")
+            if category == "新房":
+                url_field = "newhouse_url"
+            elif category == "二手房":
+                url_field = "secondhouse_url"
+            elif category == "商铺":
+                url_field = "shop_url"
+
+            if url_field:
+                stmt = """update district_rel set {} = %s
+                          where city_name = %s and dist_name = %s and  subdist_name = %s
+                """.format(url_field)
+                updated = tx.execute(stmt, (
+                    item.get("url"), item.get("city_name"), item.get("dist_name"), item.get("subdist_name")
+                ))
+                if not updated:
+                    stmt = """insert into district_rel(city_name,dist_name,subdist_name,{})
+                                VALUES (%s,%s,%s,%s)""".format(url_field)
+                    tx.execute(stmt, (
+                       item.get("city_name"), item.get("dist_name"), item.get("subdist_name"), item.get("url")
+                    ))
 
         elif isinstance(item, AgentItem):
             stmt = """insert into agencies_temp(name, telephone, history_amount, recent_activation, source, project,
