@@ -108,7 +108,7 @@ DOWNLOAD_TIMEOUT = 10
 
 # logging
 #LOG_FILE = "esf.log"
-LOG_LEVEL = "INFO"
+# LOG_LEVEL = "INFO"
 #######  user define area  #####
 # tor setting
 HTTP_PROXY = "http://127.0.0.1:8118"

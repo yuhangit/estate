@@ -17,7 +17,7 @@ import re
 
 class AgentDistrictSpider(scrapy.Spider):
     name = "AgentDistrictSpider"
-    category = "agency"
+    category = "代理人"
     start_urls = get_project_settings().get("CATEGORIES")[category]
 
     def __init__(self,*args,**kwargs):
