@@ -129,11 +129,11 @@ class MysqlWriter(object):
         try:
             with self.cnx.cursor() as cursor:
                 category_sql = "select category_id from estate.category_rel where category_name = %s"
-                cursor.execute(category_sql, (item.get("category")))
+                cursor.execute(category_sql, (item.get("category"),))
                 category_id = cursor.fetchone()[0]
 
                 station_sql = "select station_id from estate.station_rel where station_name = %s"
-                cursor.execute(station_sql, (item.get("station_name")))
+                cursor.execute(station_sql, (item.get("station_name"),))
                 station_id = cursor.fetchone()[0]
 
                 district_sql = "select district_id from estate.district_rel where city_name = %s and " \

@@ -134,13 +134,13 @@ CATEGORIES = {"代理人":  ["https://sh.5i5j.com/jingjiren/n0/",  'https://sh.l
                               'http://shanghai.fangdd.com/loupan/','http://shanghai.qfang.com/newhouse/list',
                               'http://xf.house.163.com/sh/search/0-0-0-0-0-0-0-0-0-1-0-0-0-0-0-1-1-0-0-0-1.html',
                               ],
-                  "二手房":{'http://sh.centanet.com/ershoufang/':{"city_name":"上海","station_name":"中原地产"},
-                            'http://esf.sh.fang.com/':{"city_name":"上海", "station_name":"房天下"},
-                            'http://sh.ganji.com/fang5/':{"city_name":"上海", "station_name":"赶集网"},
-                            'http://sh.58.com/ershoufang/pn1/':{"city_name":"上海", "station_name":"58同城"},
+                  "二手房":{'http://sh.centanet.com/ershoufang/':{"city_name":"上海","station_name":"中原地产", "category":"二手房"},
+                            'http://esf.sh.fang.com/':{"city_name":"上海", "station_name":"房天下", "category":"二手房"},
+                            'http://sh.ganji.com/fang5/':{"city_name":"上海", "station_name":"赶集网", "category":"二手房"},
+                            'http://sh.58.com/ershoufang/pn1/':{"city_name":"上海", "station_name":"58同城", "category":"二手房"},
                             # 'http://house.ks.js.cn/secondhand.asp', #昆山视窗的单独爬取
-                            'http://shanghai.fangdd.com/esf/':{"city_name":"上海", "station_name":"房多多"},
-                            'http://shanghai.qfang.com/sale':{"city_name":"上海", "station_name":"Q房网"}
+                            'http://shanghai.fangdd.com/esf/':{"city_name":"上海", "station_name":"房多多", "category":"二手房"},
+                            'http://shanghai.qfang.com/sale':{"city_name":"上海", "station_name":"Q房网", "category":"二手房"}
                          },
                   "商铺":["http://shop.sh.fang.com/",'http://sh.ganji.com/fang7/','http://sh.58.com/shangpucs/pn1/',]
                   }
