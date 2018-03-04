@@ -3,6 +3,7 @@ import pymysql
 from scrapy.exceptions import NotConfigured, IgnoreRequest
 from twisted.internet import defer
 from twisted.enterprise import adbapi
+import traceback
 
 
 class SkipExistUrlMiddleware(object):
@@ -17,19 +18,26 @@ class SkipExistUrlMiddleware(object):
     def __init__(self, mysql_url):
         self.mysql_url = mysql_url
         self.report_connection_error = None
+        self.build_cnx(mysql_url)
 
+    def build_cnx(self, mysql_url):
         conn_kwargs = self.__class__.parse_mysql_url(mysql_url)
         self.cnx = pymysql.connect(**conn_kwargs)
 
     def check_exists(self, url):
-        with self.cnx.cursor() as cursor:
-            cursor.execute("select count(*) from estate.properties_temp where url = %s", (url,))
-            if cursor.fetchone()[0] > 0:
-                return True
-            cursor.execute("select count(*) from estate.agencies_temp where source =%s", (url,))
-            if cursor.fetchone()[0] > 0:
-                return True
-        return False
+        try:
+            with self.cnx.cursor() as cursor:
+                cursor.execute("select count(*) from estate.properties_temp where url = %s", (url,))
+                if cursor.fetchone()[0] > 0:
+                    return True
+                cursor.execute("select count(*) from estate.agencies_temp where source =%s", (url,))
+                if cursor.fetchone()[0] > 0:
+                    return True
+            return False
+        except pymysql.OperationalError as e:
+            print(traceback.format_exc())
+            self.build_cnx(self.mysql_url)
+            self.check_exists(url)
 
     def process_request(self, request, spider):
 
@@ -37,7 +45,7 @@ class SkipExistUrlMiddleware(object):
             raise IgnoreRequest("url <%s> has already processed" % request.url)
 
     @staticmethod
-    def parse_mysql_url(mysql_url):
+    def parse_mysql_url( mysql_url):
         params = dj_database_url.parse(mysql_url)
         conn_kwargs = {}
         conn_kwargs["host"] = params["HOST"]

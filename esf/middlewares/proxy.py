@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import sqlite3
+import traceback
 
 try:
     from stem import Signal
