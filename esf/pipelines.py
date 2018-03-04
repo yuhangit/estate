@@ -176,11 +176,13 @@ class MysqlWriter(object):
                 url_field = "shop_url"
 
             if url_field:
-                stmt = """update district_rel set {} = %s
-                          where city_name = %s and dist_name = %s and  subdist_name = %s
+                stmt = """update district_rel set {} = %s,
+                              category_id = %s,
+                              station_id = %s
+                          where district_id = %s
                 """.format(url_field)
                 updated = tx.execute(stmt, (
-                    item.get("url"), item.get("city_name"), item.get("dist_name"), item.get("subdist_name")
+                    item.get("url"), ids.get("category_id"), ids.get("station_id"), ids.get("district_id")
                 ))
                 if not updated:
                     stmt = """insert into district_rel(city_name,dist_name,subdist_name,{})
