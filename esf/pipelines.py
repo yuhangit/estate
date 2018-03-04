@@ -115,8 +115,9 @@ class MysqlWriter(object):
             yield self.dbpool.runInteraction(self.do_insert, item, ids)
         except pymysql.OperationalError:
             if self.report_connection_error:
-                self.logger.error("Can't connect to mysql:%s",self.mysql_url)
+                self.logger.error("Can't connect to mysql:%s", self.mysql_url)
                 self.report_connection_error = False
+                self.__init__(self.mysql_url)
         except:
             self.logger.exception(traceback.format_exc()+ "\n%s", item.get("url") or item.get("source") or "no url")
 
@@ -130,17 +131,20 @@ class MysqlWriter(object):
             with self.cnx.cursor() as cursor:
                 category_sql = "select category_id from estate.category_rel where category_name = %s"
                 cursor.execute(category_sql, (item.get("category"),))
-                category_id = cursor.fetchone()[0]
+                if cursor.rowcount > 0:
+                    category_id = cursor.fetchone()[0]
 
                 station_sql = "select station_id from estate.station_rel where station_name = %s"
                 cursor.execute(station_sql, (item.get("station_name"),))
-                station_id = cursor.fetchone()[0]
+                if cursor.rowcount > 0:
+                    station_id = cursor.fetchone()[0]
 
                 district_sql = "select district_id from estate.district_rel where city_name = %s and " \
                                "dist_name = %s and subdist_name = %s"
 
                 cursor.execute(district_sql, (item.get("city_name"), item.get("dist_name"), item.get("subdist_name")))
-                district_id = cursor.fetchone()[0]
+                if cursor.rowcount > 0:
+                    district_id = cursor.fetchone()[0]
         except Exception as e:
             self.logger.exception("error when retrieve id")
 

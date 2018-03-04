@@ -46,6 +46,8 @@ class SecondHouseDistrictSpider(scrapy.Spider):
         if not district:
             district = response.xpath('(//a[text()="不限"])[1]/ancestor::ul[@class="search-area-detail clearfix"]//a[not(text()="不限")]')
 
+        city_name = response.meta.get("city_name")
+        station_name = response.meta.get("station_name")
         # exception handled
         if not district:
             self.logger.error("!!!! url: %s not found any districts, checkout again this  !!!!", response.url)
@@ -55,6 +57,8 @@ class SecondHouseDistrictSpider(scrapy.Spider):
             l.add_value("subdist_name", None)
             l.add_value("url", response.url)
             l.add_value("category", self.category)
+            l.add_value("city_name", city_name)
+            l.add_value("station_name", station_name)
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -117,7 +121,7 @@ class SecondHouseDistrictSpider(scrapy.Spider):
             l = ItemLoader(item=DistrictItem())
             l.default_output_processor = TakeFirst()
 
-            l.add_value("secondhouse_url", response.url)
+            l.add_value("url", response.url)
 
             l.add_value("dist_name", district)
             l.add_value("subdist_name", None)
