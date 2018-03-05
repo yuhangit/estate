@@ -3,10 +3,20 @@ import pymysql
 from esf.settings import MYSQL_PIPELINE_URL
 import csv
 import dj_database_url
+import sys
 
+datatype = 1
+accuracy = 0
+
+if len(sys.argv) > 1:
+    datatype = sys.argv[1]
+elif len(sys.argv)> 2:
+    accuracy = sys.argv[2]
+
+print("数据端口：%s, 精确度：%s" %(datatype, accuracy))
 
 def db_paras(url):
-    paras = dj_database_url(MYSQL_PIPELINE_URL)
+    paras = dj_database_url.parse(MYSQL_PIPELINE_URL)
     db_paras = {}
     db_paras["host"] = paras["HOST"]
     db_paras["user"] = paras["USER"]
@@ -16,44 +26,28 @@ def db_paras(url):
     db_paras = {k: v for k,v in db_paras.items() if v }
     return db_paras
 
+
 f = open("data/agencies.tsv", "w", newline="")
 csvWriter = csv.writer(f, dialect="excel", delimiter="\t")
 
-with pymysql.connect(**db_paras(MYSQL_PIPELINE_URL)) as cnx:
-    cursor = cnx.cursor()
+with pymysql.connect(**db_paras(MYSQL_PIPELINE_URL)) as cursor:
     cursor.execute("""
-        drop table if EXISTS agencies_unique;
+        drop table if EXISTS estate.agencies_unique;
     """)
     cursor.execute("""
-        create table agencies_unique 
+        create table estate.agencies_unique 
         as select distinct name,telephone,history_amount,recent_activation
-            ,source,project, spider,server, dt, second_house_amount,new_house_amount, rent_house_
-            amount, company,address, register_date, district_id, station_id,category_id 
-            from agencies_temp;
+            ,source,project, spider,server, dt, second_house_amount,new_house_amount, rent_house_amount
+            , company,address, register_date, district_id, station_id,category_id 
+            from estate.agencies_temp;
     """)
-
-rows = []
-d = {}
-for row in rows:
-    d.setdefault((row[0], row[-1]), []).append(row[1])
-
-for k, v in d.items():
-    # make sure v is great or equal to 3
-    if len(v) < 3:
-        v = v[0:len(v)] + [0]*(3-len(v))
-    row = (k[0], "20203%02d0022" %(v[0]))
-    csvWriter.writerow(row)
-
-with pymysql.connect(**db_paras(MYSQL_PIPELINE_URL)) as cnx:
-    cursor = cnx.cursor()
-    cursor.execute("""
-      select telephone
-      from main.agencies 
-      where instr(source,'.fang.com') >0 and dist_name ='上海周边' and subdist_name= '昆山'
-      ORDER BY second_house_amount DESC 
-      LIMIT 25
-""")
+    cursor.execute("select city_id,dist_id, subdist_id, station_id, category_id,telephone from estate.v_agencies_top50")
     rows = cursor.fetchall()
 
+
 for row in rows:
-    csvWriter.writerow([row[0], "20202030822"])
+    format_row = list(row[:-1])
+    format_row.insert(0, datatype)
+    format_row.append(accuracy)
+    row = ( row[-1], '%d%02d%02d%02d%02d%d%d' %tuple(format_row))
+    csvWriter.writerow(row)
