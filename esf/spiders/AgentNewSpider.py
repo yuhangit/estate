@@ -165,7 +165,7 @@ class AgentDistrictSpider(scrapy.Spider):
         for url in subdistrict_urls:
             subdistrict_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
             subdistrict = "".join(url.xpath('.//text()').extract()).strip()
-
+            self.logger.info("subdistrict name: <%s>", subdist_name)
             # 子区域替换成区域
             if subdist_name :
                 dist_name = subdistrict
