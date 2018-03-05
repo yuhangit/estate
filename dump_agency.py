@@ -1,27 +1,38 @@
 #!/usr/bin/env python
-import sqlite3
+import pymysql
+from esf.settings import MYSQL_PIPELINE_URL
 import csv
+import dj_database_url
+
+
+def db_paras(url):
+    paras = dj_database_url(MYSQL_PIPELINE_URL)
+    db_paras = {}
+    db_paras["host"] = paras["HOST"]
+    db_paras["user"] = paras["USER"]
+    db_paras["passwd"] = paras["PASSWORD"]
+    db_paras["port"] = paras["PORT"]
+    db_paras["db"] = paras["NAME"]
+    db_paras = {k: v for k,v in db_paras.items() if v }
+    return db_paras
 
 f = open("data/agencies.tsv", "w", newline="")
 csvWriter = csv.writer(f, dialect="excel", delimiter="\t")
 
-with sqlite3.connect("data/esf_urls.db") as cnx:
+with pymysql.connect(**db_paras(MYSQL_PIPELINE_URL)) as cnx:
     cursor = cnx.cursor()
     cursor.execute("""
-        with t1 as (select *  from agencies where dist_name ='昆山' and name is not null),
-        t2 as(select telephone,count(*) as cnt
-              from t1
-              GROUP BY telephone
-              ORDER BY cnt desc
-              LIMIT  25
-             )
-        SELECT t1.telephone,subdist_id, count(*), max(t2.cnt) from  t1 INNER JOIN t2 on t1.telephone = t2.telephone
-        GROUP BY  t1.telephone, subdist_id
-        order by max(t2.cnt) desc, count(*) desc
-        ;
+        drop table if EXISTS agencies_unique;
     """)
-    rows = cursor.fetchall()
+    cursor.execute("""
+        create table agencies_unique 
+        as select distinct name,telephone,history_amount,recent_activation
+            ,source,project, spider,server, dt, second_house_amount,new_house_amount, rent_house_
+            amount, company,address, register_date, district_id, station_id,category_id 
+            from agencies_temp;
+    """)
 
+rows = []
 d = {}
 for row in rows:
     d.setdefault((row[0], row[-1]), []).append(row[1])
@@ -33,7 +44,7 @@ for k, v in d.items():
     row = (k[0], "20203%02d0022" %(v[0]))
     csvWriter.writerow(row)
 
-with sqlite3.connect("data/esf_urls.db") as cnx:
+with pymysql.connect(**db_paras(MYSQL_PIPELINE_URL)) as cnx:
     cursor = cnx.cursor()
     cursor.execute("""
       select telephone
