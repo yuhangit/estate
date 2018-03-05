@@ -147,4 +147,4 @@ CATEGORIES = {"代理人":  ["https://sh.5i5j.com/jingjiren/n0/",  'https://sh.l
 # update partial urls of not equal 0
 REFRESH_URLS = 0
 
-MYSQL_PIPELINE_URL = "mysql://logan:09010163@104.128.235.71/estate"
+MYSQL_PIPELINE_URL = "mysql://logan:09010163@207.148.102.197/estate"
