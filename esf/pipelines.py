@@ -174,6 +174,8 @@ class MysqlWriter(object):
                 url_field = "secondhouse_url"
             elif category == "商铺":
                 url_field = "shop_url"
+            elif category == "经纪人":
+                url_field = "agency_url"
 
             if url_field:
                 stmt = """update district_rel set {} = %s,

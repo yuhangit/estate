@@ -177,8 +177,7 @@ class SecondHouseIndexPageSpider(scrapy.spiders.CrawlSpider):
     def start_requests(self):
         with sqlite3.connect(get_project_settings().get("STORE_DATABASE")) as cnx:
             cursor = cnx.cursor()
-            cursor.execute("select dist_name,subdist_name,url from main.dist_name "
-                           "where instr(source, '.centanet.com') > 0 and category = ?", [self.category])
+            cursor.execute("", [self.category])
             url_infos = cursor.fetchall()
 
         for url_info in url_infos:

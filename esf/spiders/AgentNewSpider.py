@@ -7,34 +7,22 @@ from scrapy.utils.project import get_project_settings
 from scrapy.http import Request
 from esf.items import AgentItem, DistrictItem,IndexItem
 from scrapy.loader import ItemLoader
-
+from miscellaneous import DBConnect
 from urllib.parse import urlparse,urlencode
 import socket
 import datetime
 import sqlite3
 import re
-
+import pymysql
 
 class AgentDistrictSpider(scrapy.Spider):
     name = "AgentDistrictSpider"
-    category = "代理人"
+    category = "经纪人"
     start_urls = get_project_settings().get("CATEGORIES")[category]
 
-    def __init__(self,*args,**kwargs):
-        super(AgentDistrictSpider,self).__init__()
-        # 如何setting 中定义refresh则重新刷新部分页面
-        if get_project_settings().get("REFRESH_URLS"):
-            self.logger.critical("refresh partial urls")
-            self.start_urls = self.fresh_urls()
-
-    def fresh_urls(self):
-        with sqlite3.connect("data/esf_urls_test.db") as cnx:
-            cursor = cnx.cursor()
-            cursor.execute("select DISTINCT source from district_rel where subdist_name = 'nodef' and category = '?'",
-                           [self.category])
-            urls = cursor.fetchall()
-            cursor.executemany("DELETE from district_rel where source = ?", urls)
-            return [r[0] for r in urls]
+    def start_requests(self):
+        for url,meta in self.start_urls.items():
+            yield Request(url, meta=meta)
 
     def parse(self, response):
         """
@@ -93,12 +81,19 @@ class AgentDistrictSpider(scrapy.Spider):
 
             yield l.load_item()
 
+        meta = response.meta
         for url in district_urls:
             district_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
             district_name = "".join(url.xpath('.//text()').extract()).strip()
 
+            meta.update(dist_name=district_name)
+
+            if district_name == "上海周边":
+                meta.update(city_name=district_name,
+                            subdist_name="其他")
+
             yield Request(url=district_url, callback=self.parse_subdistrict,
-                          meta={"dist_name": district_name, "category": self.category})
+                          meta=meta)
 
     def parse_subdistrict(self, response):
         """
@@ -137,18 +132,27 @@ class AgentDistrictSpider(scrapy.Spider):
             subdistrict_urls = response.xpath('(//*[text()="不限"])[2]//ancestor::p[@class="subterm fl"]//a[not(text()="不限")]')
         ###
         ##
-        district = response.meta.get("dist_name")
+        city_name = response.meta.get("city_name")
         category = response.meta.get("category")
+        dist_name = response.meta.get("dist_name")
+        subdist_name = response.meta.get("subdist_name")
+        station_name = response.meta.get("station_name")
+
 
         ### 若子区域列表为空 插入一条subdistrict 为nodef的数据.
         if not subdistrict_urls:
             self.logger.critical("!!!! url: <%s> not  found any sub_districts, checkout again  !!!!", response.url)
             l = ItemLoader(item=DistrictItem())
             l.default_output_processor = TakeFirst()
-            l.add_value("dist_name", district)
-            l.add_value("subdist_name", "nodef")
+
             l.add_value("url", response.url)
+
+            l.add_value("dist_name", dist_name)
+            l.add_value("subdist_name", None)
             l.add_value("category", category)
+            l.add_value("city_name", city_name)
+            l.add_value("station_name", station_name)
+
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -162,10 +166,18 @@ class AgentDistrictSpider(scrapy.Spider):
             subdistrict_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
             subdistrict = "".join(url.xpath('.//text()').extract()).strip()
 
+            # 子区域替换成区域
+            if subdist_name :
+                dist_name = subdistrict
+            else:
+                subdist_name = subdistrict
+
             l = ItemLoader(item=DistrictItem(), selector=url)
             l.default_output_processor = TakeFirst()
-            l.add_value("dist_name", district)
-            l.add_value("subdist_name", subdistrict)
+            l.add_value("dist_name", dist_name)
+            l.add_value("city_name", city_name)
+            l.add_value("station_name", station_name)
+            l.add_value("subdist_name", subdist_name)
             l.add_value("url", subdistrict_url)
             l.add_value("category", category)
 
@@ -176,7 +188,7 @@ class AgentDistrictSpider(scrapy.Spider):
             l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
             yield l.load_item()
-            meta = {"dist_name":district,"subdist_name":subdistrict,"category":category}
+
 
 
 class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):

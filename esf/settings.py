@@ -127,22 +127,26 @@ REQUESTS_HEADERS = {
 STORE_DATABASE = "data/esf_urls.db"
 
 
-CATEGORIES = {"代理人":  ["https://sh.5i5j.com/jingjiren/n0/",  'https://sh.lianjia.com/jingjiren/', 'https://shanghai.anjuke.com/tycoon/',
-                                     'http://shanghai.qfang.com/tycoon/o0', 'http://sh.ganji.com/fang/agent/', 'http://esf.sh.fang.com/agenthome/',
-                                     'http://sh.centanet.com/jingjiren/'],
-                  "新房":['http://sh.centanet.com/xinfang/','http://newhouse.sh.fang.com/house/s/','http://sh.ganji.com/fang12/',
+CATEGORIES = {"经纪人": {"https://sh.5i5j.com/jingjiren/n0/": {"city_name": "上海", "station_name": "我爱我家", "category": "经纪人"},
+                        'https://sh.lianjia.com/jingjiren/': {"city_name": "上海", "station_name": "链家", "category": "经纪人"},
+                        'https://shanghai.anjuke.com/tycoon/': {"city_name": "上海", "station_name": "安居客", "category": "经纪人"},
+                        'http://shanghai.qfang.com/tycoon/o0': {"city_name": "上海", "station_name": "Q房网", "category": "经纪人"},
+                        'http://sh.ganji.com/fang/agent/': {"city_name": "上海","station_name": "赶集网", "category": "经纪人"},
+                        'http://esf.sh.fang.com/agenthome/': {"city_name": "上海","station_name": "房天下", "category": "经纪人"},
+                        'http://sh.centanet.com/jingjiren/': {"city_name": "上海","station_name": "中原地产", "category": "经纪人"}},
+             "新房": ['http://sh.centanet.com/xinfang/','http://newhouse.sh.fang.com/house/s/','http://sh.ganji.com/fang12/',
                               'http://shanghai.fangdd.com/loupan/','http://shanghai.qfang.com/newhouse/list',
                               'http://xf.house.163.com/sh/search/0-0-0-0-0-0-0-0-0-1-0-0-0-0-0-1-1-0-0-0-1.html',
                               ],
-                  "二手房": {'http://sh.centanet.com/ershoufang/':{"city_name":"上海","station_name": "中原地产", "category": "二手房"},
-                            'http://esf.sh.fang.com/':{"city_name":"上海", "station_name": "房天下", "category": "二手房"},
-                            'http://sh.ganji.com/fang5/':{"city_name":"上海", "station_name": "赶集网", "category": "二手房"},
-                            'http://sh.58.com/ershoufang/pn1/':{"city_name":"上海", "station_name": "58同城", "category": "二手房"},
-                            # 'http://house.ks.js.cn/secondhand.asp', #昆山视窗的单独爬取
-                            'http://shanghai.fangdd.com/esf/':{"city_name":"上海", "station_name": "房多多", "category": "二手房"},
-                            'http://shanghai.qfang.com/sale':{"city_name":"上海", "station_name": "Q房网", "category": "二手房"}
+             "二手房": {'http://sh.centanet.com/ershoufang/':{"city_name":"上海","station_name": "中原地产", "category": "二手房"},
+                        'http://esf.sh.fang.com/':{"city_name":"上海", "station_name": "房天下", "category": "二手房"},
+                        'http://sh.ganji.com/fang5/':{"city_name":"上海", "station_name": "赶集网", "category": "二手房"},
+                        'http://sh.58.com/ershoufang/pn1/':{"city_name":"上海", "station_name": "58同城", "category": "二手房"},
+                        # 'http://house.ks.js.cn/secondhand.asp', #昆山视窗的单独爬取
+                        'http://shanghai.fangdd.com/esf/':{"city_name":"上海", "station_name": "房多多", "category": "二手房"},
+                        'http://shanghai.qfang.com/sale':{"city_name":"上海", "station_name": "Q房网", "category": "二手房"}
                          },
-                  "商铺":["http://shop.sh.fang.com/",'http://sh.ganji.com/fang7/','http://sh.58.com/shangpucs/pn1/',]
+             "商铺": ["http://shop.sh.fang.com/",'http://sh.ganji.com/fang7/','http://sh.58.com/shangpucs/pn1/',]
                   }
 # update partial urls of not equal 0
 REFRESH_URLS = 0
