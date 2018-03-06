@@ -89,7 +89,7 @@ class AgentDistrictSpider(scrapy.Spider):
         meta = response.meta
         for url in district_urls:
             district_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
-            district_name = "".join(url.xpath('.//text()').extract()).strip()
+            district_name = "".join(url.xpath('.//text()').extract()).strip().replace("区", "")
 
             meta.update(dist_name=district_name)
 
