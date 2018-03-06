@@ -36,6 +36,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         # 检测 response 编码, 替换成utf-8
         encoding = chardet.detect(response.body)['encoding']
         if encoding != "utf-8":
+            self.logger.info("response <%s> encode is not utf-8 replace it", response.url)
             response.body = response.body.decode(encoding,"replace").encode("utf-8")
 
         # agency table

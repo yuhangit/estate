@@ -7,7 +7,7 @@ from scrapy.utils.project import get_project_settings
 from scrapy.http import Request
 from esf.items import AgentItem, DistrictItem,IndexItem
 from scrapy.loader import ItemLoader
-from miscellaneous import DBConnect
+from scrapehelper import DBConnect,ScrapeHelper
 from urllib.parse import urlparse,urlencode
 import socket
 import datetime
@@ -16,7 +16,8 @@ import re
 import pymysql
 
 
-class AgentDistrictSpider(scrapy.Spider):
+
+class AgentDistrictSpider(scrapy.Spider, ScrapeHelper):
     name = "AgentDistrictSpider"
     category = "经纪人"
     start_urls = get_project_settings().get("CATEGORIES")[category]
@@ -86,7 +87,7 @@ class AgentDistrictSpider(scrapy.Spider):
 
             yield l.load_item()
 
-        meta = response.meta
+        meta = self.get_meta_info(response.meta)
         for url in district_urls:
             district_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
             district_name = "".join(url.xpath('.//text()').extract()).strip().replace("区", "")

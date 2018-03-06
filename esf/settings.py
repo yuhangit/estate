@@ -136,10 +136,14 @@ CATEGORIES = {"经纪人": {
                         'http://esf.sh.fang.com/agenthome/': {"city_name": "上海","station_name": "房天下", "category": "经纪人"},
                         'http://sh.centanet.com/jingjiren/': {"city_name": "上海","station_name": "中原地产", "category": "经纪人"}
                         },
-             "新房": ['http://sh.centanet.com/xinfang/','http://newhouse.sh.fang.com/house/s/','http://sh.ganji.com/fang12/',
-                              'http://shanghai.fangdd.com/loupan/','http://shanghai.qfang.com/newhouse/list',
-                              'http://xf.house.163.com/sh/search/0-0-0-0-0-0-0-0-0-1-0-0-0-0-0-1-1-0-0-0-1.html',
-                              ],
+             "新房": {
+                        'http://sh.centanet.com/xinfang/': {"city_name": "上海", "station_name": "中原地产", "category": "新房"},
+                        'http://newhouse.sh.fang.com/house/s/': {"city_name": "上海", "station_name": "房天下", "category": "新房"},
+                        'http://sh.ganji.com/fang12/': {"city_name": "上海", "station_name": "赶集网", "category": "新房"},
+                        'http://shanghai.fangdd.com/loupan/': {"city_name": "上海", "station_name": "房多多", "category": "新房"},
+                        'http://shanghai.qfang.com/newhouse/list': {"city_name": "上海", "station_name": "Q房网", "category": "新房"},
+                        # 'http://xf.house.163.com/sh/search/0-0-0-0-0-0-0-0-0-1-0-0-0-0-0-1-1-0-0-0-1.html': {"city_name": "上海", "station_name": "网易房产", "category": "新房"}  # JavaScript event code,
+                        },
              "二手房": {'http://sh.centanet.com/ershoufang/':{"city_name":"上海","station_name": "中原地产", "category": "二手房"},
                         'http://esf.sh.fang.com/':{"city_name":"上海", "station_name": "房天下", "category": "二手房"},
                         'http://sh.ganji.com/fang5/':{"city_name":"上海", "station_name": "赶集网", "category": "二手房"},
@@ -154,3 +158,11 @@ CATEGORIES = {"经纪人": {
 REFRESH_URLS = 0
 
 MYSQL_PIPELINE_URL = "mysql://logan:09010163@207.148.102.197/estate"
+
+
+#  global used functions
+
+# 传递meta值
+def get_meta_info(meta):
+    info_field = ["city_name", "dist_name", "subdist_name", "category", "station_name"]
+    return { k: v for k, v in meta.items() if k in info_field}
