@@ -202,9 +202,11 @@ class BasicPropertySpider(scrapy.spiders.CrawlSpider):
 
     @property
     def domains_and_parsers(self):
-        """由主站名称(.example.com)和解析字段({"field_name":"xpath"})构成的列表
+        """由主站名称(.example.com)和解析字段({'type':["field_name","xpath"]})构成的列表
         , 用于解析具体页面, 格式如下:
-        { ".example.com":{"field_name":"xpath",...},...}
+        { ".example.com":{"xpath":[("field_name":"xpath"),(),...},
+                         "value":[("field_name","value"),(),...],
+                         "css":[("field_name","css"),(),...]   }
         """
         raise NotImplementedError
 
@@ -237,7 +239,13 @@ class BasicPropertySpider(scrapy.spiders.CrawlSpider):
         l = ItemLoader(item=PropertyItem(), selector=response)
         l.default_output_processor = TakeFirst()
 
-        l.add_xpath()
+        for type,field in field_xpaths.items():
+            if type == "xpath":
+                l.add_xpath(field[0],field[1])
+            elif type == "value":
+                l.add_value(field[0],field[1])
+            elif type == "css":
+                l.add_css(field[0],field[1])
 
         # housekeeping
         l.add_value("source", response.request.url)
