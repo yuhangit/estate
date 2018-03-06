@@ -192,4 +192,6 @@ class HTTPProxyMiddleware(object):
             return response
         # request.meta['cnt'] = request.meta.get('cnt', 0) + 1
         self.loger.info("%s request status %s, proxy: %s." %(request.url, response.status, request.meta.get("proxy")))
-        return request
+        req = request.copy()
+        req.dont_filter = True
+        return req
