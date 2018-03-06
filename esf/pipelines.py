@@ -202,7 +202,7 @@ class MysqlWriter(object):
                               item.get("spider"), item.get("agent_name"), item.get("agent_company"),
                               item.get("agent_phone"), item.get("recent_activation"), ids.get("district_id")
                               , ids.get("station_id"), ids.get("category_id")))
-
+        # obsoleted use IndexItem  instead
         elif isinstance(item, DistrictItem):
             url_field = None
             category_field = None
@@ -236,6 +236,12 @@ class MysqlWriter(object):
                     tx.execute(stmt, (
                        item.get("city_name"), item.get("dist_name"), item.get("subdist_name"), item.get("url")
                     ))
+        elif isinstance(item, IndexItem):
+
+            stmt = """"insert into district_index_url(district_id, station_id, category_id, url) 
+                    values(%s,%s,%s,%s)
+            """
+            tx.execute(stmt, (ids.get("district_id"), ids.get("station_id"), ids.get("category_id"), item.get("url")))
 
         elif isinstance(item, AgentItem):
             stmt = """insert into agencies_temp(name, telephone, history_amount, recent_activation, source, project,

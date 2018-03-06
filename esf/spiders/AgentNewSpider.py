@@ -15,6 +15,7 @@ import sqlite3
 import re
 import pymysql
 
+
 class AgentDistrictSpider(scrapy.Spider):
     name = "AgentDistrictSpider"
     category = "经纪人"
@@ -63,14 +64,17 @@ class AgentDistrictSpider(scrapy.Spider):
             district_urls = response.xpath('(//*[text()="不限"])[1]//ancestor::p[@class="termcon fl"]//a[not(text()="不限")]')
         ###
         station_name = response.meta.get("station_name")
+        city_name = response.meta.get("city_name")
         # exception handled
         if not district_urls:
             self.logger.error("!!!! url: %s not found any districts, checkout again this  !!!!", response.url)
-            l = ItemLoader(item=DistrictItem())
+            l = ItemLoader(item=IndexItem())
             l.default_output_processor = TakeFirst()
+            l.add_value("url", response.url)
+
             l.add_value("dist_name", None)
             l.add_value("subdist_name", None)
-            l.add_value("url", response.url)
+            l.add_value("city_name", city_name)
             l.add_value("category", self.category)
             l.add_value("station_name", station_name)
 
@@ -143,7 +147,7 @@ class AgentDistrictSpider(scrapy.Spider):
         ### 若子区域列表为空 插入一条subdistrict 为nodef的数据.
         if not subdistrict_urls:
             self.logger.critical("!!!! url: <%s> not  found any sub_districts, checkout again  !!!!", response.url)
-            l = ItemLoader(item=DistrictItem())
+            l = ItemLoader(item=IndexItem())
             l.default_output_processor = TakeFirst()
 
             l.add_value("url", response.url)
@@ -153,7 +157,6 @@ class AgentDistrictSpider(scrapy.Spider):
             l.add_value("category", category)
             l.add_value("city_name", city_name)
             l.add_value("station_name", station_name)
-
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -174,7 +177,7 @@ class AgentDistrictSpider(scrapy.Spider):
             else:
                 subdist_name = subdistrict
 
-            l = ItemLoader(item=DistrictItem(), selector=url)
+            l = ItemLoader(item=IndexItem(), selector=url)
             l.default_output_processor = TakeFirst()
             l.add_value("dist_name", dist_name)
             l.add_value("city_name", city_name)

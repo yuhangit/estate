@@ -42,7 +42,6 @@ class PropertyItem(HouseKeepingItem):
 
 class IndexItem(HouseKeepingItem):
     url = Field()
-    retrived = Field()
 
 
 class AgentItem(HouseKeepingItem):
