@@ -3,9 +3,14 @@ from scrapy.utils.project import get_project_settings
 from scrapy.loader.processors import TakeFirst, Join, MapCompose
 from scrapy.loader import ItemLoader
 from esf.items import IndexItem, PropertyItem, AgentItem
+from scrapy.utils.project import get_project_settings
+from scrapy.http import Request
+from urllib.parse import urlparse
+import scrapy
 import pymysql
 import socket
 import datetime
+import abc
 
 
 class DBConnect:
@@ -30,34 +35,151 @@ class DBConnect:
         return cnx
 
 
-class ScrapeHelper(object):
+class BasicDistrictSpider(scrapy.Spider):
 
-    def get_meta_info(self, meta):
+    @property
+    def category(self):
+        raise NotImplementedError("house category: newhouse, secondhouse ect")
+
+    @property
+    def dist_xpaths(self):
+        raise NotImplementedError("dist_xpaths must be iterable")
+    @property
+    def subdist_xpaths(self):
+        raise NotImplementedError("subdist_xpaths must be iterable")
+    @property
+    def name(self):
+        raise NotImplementedError
+
+    def start_requests(self):
+        start_urls = get_project_settings().get("CATEGORIES").get(self.category)
+        for url,meta in start_urls.items():
+            yield Request(url=url, meta=meta, callback=self.parse_dist)
+
+    @staticmethod
+    def get_meta_info(meta):
         info_field = ["city_name", "dist_name", "subdist_name", "category", "station_name"]
         return { k: v for k, v in meta.items() if k in info_field}
 
-    def dist_error(self, response,**kwargs):
-        city_name = kwargs.get("city_name")
-        dist_name = kwargs.get("dist_name")
-        subdist_name = kwargs.get("subdist_name")
-        category = kwargs.get("category")
-        station_name = kwargs.get("station_name")
+    def parse_dist(self, response):
+        district = []
 
-        self.logger.error("!!!! url: %s not found any districts, checkout again this  !!!!", response.url)
-        l = ItemLoader(item=IndexItem())
-        l.default_output_processor = TakeFirst()
-        l.add_value("url", response.url)
+        info = None
+        for xpath in self.dist_xpaths:
+            if not district:
+                district = response.xpath(xpath[0])
+                info = xpath[1]
+            else:
+                self.logger.info("find dist_name in [%s]", info)
+                break
 
-        l.add_value("dist_name", dist_name)
-        l.add_value("subdist_name", subdist_name)
-        l.add_value("category", category)
-        l.add_value("city_name", city_name)
-        l.add_value("station_name", station_name)
+        city_name = response.meta.get("city_name")
+        station_name = response.meta.get("station_name")
+        category = response.meta.get("category")
 
-        l.add_value("source", response.request.url)
-        l.add_value("project", self.settings.get("BOT_NAME"))
-        l.add_value("spider", self.name)
-        l.add_value("server", socket.gethostname())
-        l.add_value("dt", datetime.datetime.utcnow())
+        if not district:
+            self.logger.error("!!!! url: %s not found any districts, checkout again this  !!!!", response.url)
+            l = ItemLoader(item=IndexItem())
+            l.default_output_processor = TakeFirst()
+            l.add_value("url", response.url)
 
-        yield l.load_item()
+            l.add_value("dist_name", None)
+            l.add_value("subdist_name", None)
+            l.add_value("category", category)
+            l.add_value("city_name", city_name)
+            l.add_value("station_name", station_name)
+
+            l.add_value("source", response.request.url)
+            l.add_value("project", self.settings.get("BOT_NAME"))
+            l.add_value("spider", self.name)
+            l.add_value("server", socket.gethostname())
+            l.add_value("dt", datetime.datetime.utcnow())
+
+            yield l.load_item()
+
+        meta = self.__class__.get_meta_info(response.meta)
+        for url in district:
+            district_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
+            district_name = "".join(url.xpath('.//text()').extract()).strip().replace("区", "")
+
+            meta.update(dist_name=district_name)
+
+            if district_name == "上海周边":
+                meta.update(city_name=district_name, subdist_name="其他")
+
+            yield Request(url=district_url, callback=self.parse_subdistrict, meta=meta)
+
+    def parse_subdistrict(self, response):
+        """
+        在添加新的response时, 要依次测试每个xpath, xpath排列规则, 专有的站上面,
+        普适在下面, 否则可能拿到错误的信息.
+        :param response:
+        :return:
+        """
+        ### 得到子区域列表
+        subdistrict_urls = []
+        info = None
+
+        for xpath in self.dist_xpaths:
+            if not subdistrict_urls:
+                subdistrict_urls = response.xpath(xpath[0])
+                info = xpath[1]
+            else:
+                self.logger.info("find dist_name in [%s]", info)
+                break
+
+        city_name = response.meta.get("city_name")
+        category = response.meta.get("category")
+        dist_name = response.meta.get("dist_name")
+        subdist_name = response.meta.get("subdist_name")
+        station_name = response.meta.get("station_name")
+
+        ### 若子区域列表为空 插入一条subdistrict 为nodef的数据.
+        if not subdistrict_urls:
+            self.logger.critical("!!!! url: <%s> not  found any sub_districts, checkout again  !!!!", response.url)
+            l = ItemLoader(item=IndexItem())
+            l.default_output_processor = TakeFirst()
+
+            l.add_value("url", response.url)
+
+            l.add_value("dist_name", dist_name)
+            l.add_value("subdist_name", None)
+            l.add_value("category", category)
+            l.add_value("city_name", city_name)
+            l.add_value("station_name", station_name)
+
+            l.add_value("source", response.request.url)
+            l.add_value("project", self.settings.get("BOT_NAME"))
+            l.add_value("spider", self.name)
+            l.add_value("server", socket.gethostname())
+            l.add_value("dt", datetime.datetime.utcnow())
+
+            yield l.load_item()
+
+        for url in subdistrict_urls:
+            subdistrict_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
+            subdistrict = "".join(url.xpath('.//text()').extract()).strip()
+            self.logger.info("subdistrict name: <%s>", subdist_name)
+
+            # 子区域替换成区域
+            if city_name == "上海周边":
+                dist_name = subdistrict
+            else:
+                subdist_name = subdistrict
+
+            l = ItemLoader(item=IndexItem(), selector=url)
+            l.default_output_processor = TakeFirst()
+            l.add_value("dist_name", dist_name)
+            l.add_value("city_name", city_name)
+            l.add_value("station_name", station_name)
+            l.add_value("subdist_name", subdist_name)
+            l.add_value("url", subdistrict_url)
+            l.add_value("category", category)
+
+            l.add_value("source", response.request.url)
+            l.add_value("project", self.settings.get("BOT_NAME"))
+            l.add_value("spider", self.name)
+            l.add_value("server", socket.gethostname())
+            l.add_value("dt", datetime.datetime.utcnow())
+
+            yield l.load_item()

@@ -7,7 +7,7 @@ from scrapy.utils.project import get_project_settings
 from scrapy.http import Request
 from esf.items import AgentItem, DistrictItem,IndexItem
 from scrapy.loader import ItemLoader
-from scrapehelper import DBConnect,ScrapeHelper
+from scrapehelper import DBConnect,BasicDistrictSpider
 from urllib.parse import urlparse,urlencode
 import socket
 import datetime
@@ -16,8 +16,7 @@ import re
 import pymysql
 
 
-
-class AgentDistrictSpider(scrapy.Spider, ScrapeHelper):
+class AgentDistrictSpider(BasicDistrictSpider):
     name = "AgentDistrictSpider"
     category = "经纪人"
     start_urls = get_project_settings().get("CATEGORIES")[category]

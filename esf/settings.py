@@ -75,7 +75,7 @@ DOWNLOADER_MIDDLEWARES = {
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     # 'esf.pipelines.SqlitePipeline': 300,
-    'esf.pipelines.MysqlWriter': 400
+    # 'esf.pipelines.MysqlWriter': 400
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -161,8 +161,3 @@ MYSQL_PIPELINE_URL = "mysql://logan:09010163@207.148.102.197/estate"
 
 
 #  global used functions
-
-# 传递meta值
-def get_meta_info(meta):
-    info_field = ["city_name", "dist_name", "subdist_name", "category", "station_name"]
-    return { k: v for k, v in meta.items() if k in info_field}

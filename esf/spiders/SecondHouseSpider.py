@@ -7,7 +7,7 @@ from scrapy.utils.project import get_project_settings
 from scrapy.http import Request
 from esf.items import AgentItem,IndexItem,PropertyItem
 from scrapy.loader import ItemLoader
-from scrapehelper import ScrapeHelper, DBConnect
+from scrapehelper import BasicDistrictSpider, DBConnect
 from urllib.parse import urlparse,urlencode
 import socket
 import datetime
@@ -15,7 +15,7 @@ import sqlite3
 import re
 
 
-class SecondHouseDistrictSpider(scrapy.Spider, ScrapeHelper):
+class SecondHouseDistrictSpider(BasicDistrictSpider):
     name = "SecondHouseDistrictSpider"
     category = "二手房"
 
