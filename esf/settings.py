@@ -55,7 +55,7 @@ TELNETCONSOLE_ENABLED = True
 DOWNLOADER_MIDDLEWARES = {
    #'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
     # 'esf.middlewares.proxy.TorProxyMiddleware' : 400,
-   # 'scrapy.downloadermiddlewares.retry.RetryMiddleware':None, # this middleware used to retry returned requsts
+   'scrapy.downloadermiddlewares.retry.RetryMiddleware':None, # this middleware used to retry retry_codes
     'esf.middlewares.proxy.HTTPProxyMiddleware': 400,
     'esf.middlewares.SkipExistUrl.SkipExistUrlMiddleware':100,
    # 'esf.middlewares.CustomRetry.CustomRetryMiddleware': 500,

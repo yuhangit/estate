@@ -193,7 +193,7 @@ class MysqlWriter(object):
 
         if isinstance(item, PropertyItem):
 
-            stmt = '''insert into properties_temp(title, url, price, address, source, project, server, dt,
+            stmt = '''insert into estate.properties_temp(title, url, price, address, source, project, server, dt,
                           spider, agent_name, agent_company, agent_phone, recent_activation, 
                           district_id, station_id, category_id) 
                       values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
@@ -238,11 +238,17 @@ class MysqlWriter(object):
                     ))
         elif isinstance(item, IndexItem):
 
-            stmt = """insert into district_index_url(district_id, station_id, category_id, url) 
+            stmt = """insert into estate.district_index_url(district_id, station_id, category_id, url) 
                     values(%s,%s,%s,%s)
             """
             tx.execute(stmt, (ids.get("district_id"), ids.get("station_id"), ids.get("category_id"), item.get("url")))
-
+            info_stmt = """insert into estate.district_index_info(city_name, dist_name, subdist_name,
+                                category_name, station_name, url, server, source, project, spider, dt) 
+                         VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) """
+            tx.execute(info_stmt, (item.get("city_name"), item.get("dist_name"), item.get("subdist_name"),
+                                   item.get("category_name"), item.get("station_name"), item.get("url"),
+                                   item.get("server"), item.get("source"), item.get("project"), item.get("spider"),
+                                   item.get("dt")))
         elif isinstance(item, AgentItem):
             stmt = """insert into agencies_temp(name, telephone, history_amount, recent_activation, source, project,
                           spider, server, dt, second_house_amount, new_house_amount, rent_house_amount, company, 

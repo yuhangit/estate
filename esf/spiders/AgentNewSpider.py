@@ -82,7 +82,7 @@ class AgentDistrictSpider(scrapy.Spider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("dt", datetime.datetime.utcnow())
 
             yield l.load_item()
 
@@ -162,7 +162,7 @@ class AgentDistrictSpider(scrapy.Spider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("dt", datetime.datetime.utcnow())
 
             yield l.load_item()
 
@@ -190,7 +190,7 @@ class AgentDistrictSpider(scrapy.Spider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("dt", datetime.datetime.utcnow())
 
             yield l.load_item()
 
@@ -303,7 +303,7 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("dt", datetime.datetime.utcnow())
 
             yield l.load_item()
 
@@ -326,7 +326,7 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("dt", datetime.datetime.utcnow())
 
             yield l.load_item()
 
@@ -348,7 +348,7 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("dt", datetime.datetime.utcnow())
 
             yield l.load_item()
 
@@ -376,7 +376,7 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("dt", datetime.datetime.utcnow())
 
             yield l.load_item()
 
@@ -398,7 +398,7 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("dt", datetime.datetime.utcnow())
 
             yield l.load_item()
 
@@ -422,7 +422,7 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("dt", datetime.datetime.utcnow())
 
             yield l.load_item()
 
@@ -453,7 +453,7 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("dt", datetime.datetime.utcnow())
 
             yield l.load_item()
 
