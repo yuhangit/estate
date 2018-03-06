@@ -173,7 +173,8 @@ class HTTPProxyMiddleware(object):
         if request.url.startswith("http://10.") :
             return None
 
-        self.loger.info("line 176 exception in <%s>:%s",request.url ,traceback.format_exc())
+        self.loger.info("line 176 exception in <%s> proxy <%s>:%s",
+                        request.url,request.meta.get("proxy"), traceback.format_exc())
         if isinstance(exception,TimeoutError):
             # self.loger.info("timeout error happened, retry: %s" % request.url)
             request.meta["timeout_retry"] = request.meta.get("timeout_retry", 0) + 1
