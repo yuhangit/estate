@@ -5,7 +5,7 @@ from scrapy.loader.processors import TakeFirst, Join , MapCompose
 from scrapy.linkextractors import LinkExtractor
 from scrapy.utils.project import get_project_settings
 from scrapy.http import Request
-from esf.items import AgentItem, DistrictItem,IndexItem,PropertyItem
+from esf.items import AgentItem,IndexItem,PropertyItem
 from scrapy.loader import ItemLoader
 
 from urllib.parse import urlparse,urlencode
@@ -51,11 +51,12 @@ class SecondHouseDistrictSpider(scrapy.Spider):
         # exception handled
         if not district:
             self.logger.error("!!!! url: %s not found any districts, checkout again this  !!!!", response.url)
-            l = ItemLoader(item=DistrictItem())
+            l = ItemLoader(item=IndexItem())
             l.default_output_processor = TakeFirst()
+            l.add_value("url", response.url)
+
             l.add_value("dist_name", None)
             l.add_value("subdist_name", None)
-            l.add_value("url", response.url)
             l.add_value("category", self.category)
             l.add_value("city_name", city_name)
             l.add_value("station_name", station_name)
@@ -74,6 +75,10 @@ class SecondHouseDistrictSpider(scrapy.Spider):
             district_name = "".join(url.xpath('.//text()').extract()).strip()
 
             meta.update(dist_name = district_name)
+            if district_name == "上海周边":
+                meta.update(city_name=district_name,
+                            subdist_name="其他")
+                
             yield Request(url=district_url, callback=self.parse_subdistrict,
                           meta=meta)
 
@@ -110,20 +115,21 @@ class SecondHouseDistrictSpider(scrapy.Spider):
             subdistrict = response.xpath('(//a[text()="不限"])[2]//ancestor::ul'
                                          '[@class="search-area-second clearfix"]//a[not(text()="不限")]')
 
-        district = response.meta.get("dist_name")
+        dist_name = response.meta.get("dist_name")
         category = response.meta.get("category")
         station_name = response.meta.get("station_name")
         city_name = response.meta.get("city_name")
-
+        subdist_name = response.meta.get("subdist_name")
+        
         # exception handle
         if not subdistrict:
             self.logger.critical("!!!! url: <%s> not  found any sub_districts, checkout again  !!!!", response.url)
-            l = ItemLoader(item=DistrictItem())
+            l = ItemLoader(item=IndexItem())
             l.default_output_processor = TakeFirst()
 
             l.add_value("url", response.url)
 
-            l.add_value("dist_name", district)
+            l.add_value("dist_name", dist_name)
             l.add_value("subdist_name", None)
             l.add_value("category", category)
             l.add_value("city_name", city_name)
@@ -141,12 +147,18 @@ class SecondHouseDistrictSpider(scrapy.Spider):
             subdistrict_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
             subdistrict = "".join(url.xpath('.//text()').extract()).strip()
 
-            l = ItemLoader(item=DistrictItem(), selector=url)
+            # 子区域替换成区域
+            if city_name == "上海周边":
+                dist_name = subdistrict
+            else:
+                subdist_name = subdistrict
+                
+            l = ItemLoader(item=IndexItem(), selector=url)
             l.default_output_processor = TakeFirst()
             l.add_value("url", subdistrict_url)
 
-            l.add_value("dist_name", district)
-            l.add_value("subdist_name", subdistrict)
+            l.add_value("dist_name", dist_name)
+            l.add_value("subdist_name", subdist_name)
             l.add_value("category", category)
             l.add_value("station_name", station_name)
             l.add_value("city_name", city_name)
@@ -216,6 +228,6 @@ class SecondHouseIndexPageSpider(scrapy.spiders.CrawlSpider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("date", datetime.datetime.utcnow())
 
             yield l.load_item()

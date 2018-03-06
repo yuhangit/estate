@@ -79,7 +79,7 @@ class FangScrapeSpider(scrapy.Spider):
         l.add_value("project", self.settings.get("BOT_NAME"))
         l.add_value("spider", self.name)
         l.add_value("server", socket.gethostname())
-        l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        l.add_value("date", datetime.datetime.utcnow())
 
         yield l.load_item()
 
@@ -140,7 +140,7 @@ class FangIndexSpider(scrapy.Spider):
                 l.add_value("project", self.settings.get("BOT_NAME"))
                 l.add_value("spider", self.name)
                 l.add_value("server", socket.gethostname())
-                l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                l.add_value("date", datetime.datetime.utcnow())
 
                 yield l.load_item()
         else:
@@ -153,7 +153,7 @@ class FangIndexSpider(scrapy.Spider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("date", datetime.datetime.utcnow())
 
             yield l.load_item()
 
@@ -249,7 +249,7 @@ class FangSpider(scrapy.Spider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("date", datetime.datetime.utcnow())
 
             yield l.load_item()
             yield Request(url, callback=self.parse_index_secondhouse, meta=
@@ -276,7 +276,7 @@ class FangSpider(scrapy.Spider):
                 l.add_value("project", self.settings.get("BOT_NAME"))
                 l.add_value("spider", self.name)
                 l.add_value("server", socket.gethostname())
-                l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                l.add_value("date", datetime.datetime.utcnow())
 
                 yield l.load_item()
                 yield Request(url, callback=self.parse_item_secondhouse,
@@ -292,7 +292,7 @@ class FangSpider(scrapy.Spider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("date", datetime.datetime.utcnow())
 
             yield l.load_item()
             yield Request(url, callback=self.parse_item_secondhouse
@@ -333,7 +333,7 @@ class FangSpider(scrapy.Spider):
         l.add_value("project", self.settings.get("BOT_NAME"))
         l.add_value("spider", self.name)
         l.add_value("server", socket.gethostname())
-        l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        l.add_value("date", datetime.datetime.utcnow())
 
         yield l.load_item()
 
@@ -353,7 +353,7 @@ class FangSpider(scrapy.Spider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("date", datetime.datetime.utcnow())
 
             yield l.load_item()
             yield Request(url, callback=self.parse_index_newhouse, meta=
@@ -378,7 +378,7 @@ class FangSpider(scrapy.Spider):
                 l.add_value("project", self.settings.get("BOT_NAME"))
                 l.add_value("spider", self.name)
                 l.add_value("server", socket.gethostname())
-                l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                l.add_value("date", datetime.datetime.utcnow())
 
                 yield l.load_item()
                 yield Request(url, callback=self.parse_item_newhouse,
@@ -394,7 +394,7 @@ class FangSpider(scrapy.Spider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("date", datetime.datetime.utcnow())
 
             yield l.load_item()
             yield Request(url, callback=self.parse_item_newhouse,
@@ -422,7 +422,7 @@ class FangSpider(scrapy.Spider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("date", datetime.datetime.utcnow())
 
             yield l.load_item()
 

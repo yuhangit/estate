@@ -131,7 +131,7 @@ class CentanetIndexSpider(scrapy.Spider):
                 l.add_value("project", self.settings.get("BOT_NAME"))
                 l.add_value("spider", self.name)
                 l.add_value("server", socket.gethostname())
-                l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                l.add_value("date", datetime.datetime.utcnow())
 
                 yield l.load_item()
         else:
@@ -144,7 +144,7 @@ class CentanetIndexSpider(scrapy.Spider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("date", datetime.datetime.utcnow())
 
             yield l.load_item()
 
@@ -258,7 +258,7 @@ class CentanetSpider(scrapy.Spider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("date", datetime.datetime.utcnow())
 
             yield l.load_item()
             if '/ershoufang/' in url:
@@ -289,7 +289,7 @@ class CentanetSpider(scrapy.Spider):
                 l.add_value("project", self.settings.get("BOT_NAME"))
                 l.add_value("spider", self.name)
                 l.add_value("server", socket.gethostname())
-                l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                l.add_value("date", datetime.datetime.utcnow())
 
                 yield l.load_item()
                 yield Request(url, callback=self.parse_item)
@@ -304,7 +304,7 @@ class CentanetSpider(scrapy.Spider):
             l.add_value("project", self.settings.get("BOT_NAME"))
             l.add_value("spider", self.name)
             l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            l.add_value("date", datetime.datetime.utcnow())
 
             yield l.load_item()
             yield Request(url, callback=self.parse_item_secondhouse)
