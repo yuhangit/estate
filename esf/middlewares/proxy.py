@@ -141,7 +141,7 @@ class HTTPProxyMiddleware(object):
 
     def remove_failed_proxy(self, request, spider):
         failed_proxy = request.meta['proxy']
-        logging.log(logging.DEBUG, 'Removing failed proxy...')
+        logging.log(logging.DEBUG, 'Removing failed proxy <%s>', failed_proxy)
         try:
             i = 0
             for proxy in self.proxies:
@@ -173,14 +173,14 @@ class HTTPProxyMiddleware(object):
         if request.url.startswith("http://10.") :
             return None
 
-        self.loger.info("exception in <%s>:%s",request.url ,traceback.format_exc())
+        self.loger.info("line 176 exception in <%s>:%s",request.url ,traceback.format_exc())
         if isinstance(exception,TimeoutError):
             # self.loger.info("timeout error happened, retry: %s" % request.url)
             request.meta["timeout_retry"] = request.meta.get("timeout_retry", 0) + 1
 
-        if self.remove_failed_proxy(request, spider):
-            return request
-        return request
+        self.remove_failed_proxy(request, spider)
+
+        return request.copy()
 
     def process_response(self, request, response, spider):
         # really brutal filter
