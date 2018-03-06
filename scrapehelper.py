@@ -1,5 +1,7 @@
 import dj_database_url
 from scrapy.utils.project import get_project_settings
+from scrapy.spiders import Rule
+from scrapy.linkextractors import LinkExtractor
 from scrapy.loader.processors import TakeFirst, Join, MapCompose
 from scrapy.loader import ItemLoader
 from esf.items import IndexItem, PropertyItem, AgentItem
@@ -183,3 +185,67 @@ class BasicDistrictSpider(scrapy.Spider):
             l.add_value("dt", datetime.datetime.utcnow())
 
             yield l.load_item()
+
+
+class BasicPropertySpider(scrapy.spiders.CrawlSpider):
+    __metaclass__ = abc.ABCMeta # abstract class method
+
+    @property
+    def category(self):
+        raise NotImplementedError
+    @property
+    def nextpage_xpaths(self):
+        raise NotImplementedError
+    @property
+    def items_xpaths(self):
+        raise NotImplementedError
+
+    @property
+    def domains_and_parsers(self):
+        """由主站名称(.example.com)和解析字段({"field_name":"xpath"})构成的列表
+        , 用于解析具体页面, 格式如下:
+        { ".example.com":{"field_name":"xpath",...},...}
+        """
+        raise NotImplementedError
+
+    rules = (
+        Rule(LinkExtractor(restrict_xpaths=nextpage_xpaths)),
+        Rule(LinkExtractor(restrict_xpaths=items_xpaths), callback="parse_page")
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(self.__class__, self).__init__(*args, **kwargs)
+        self.settings = get_project_settings()
+
+    @abc.abstractclassmethod
+    def parse_page(self, response):
+        self.logger.info("process url: <%s>", response.url)
+        items = []
+
+        for domain, field_xpaths in self.domains_and_parsers.items():
+            if domain in response.url :
+                self.logger.info("parse <%s> url <%s>", domain, response.url)
+                items = self.get_item(response, field_xpaths)
+                break
+
+        if not items:
+            self.logger.error("!!!! url: %s not found any items, checkout again this  !!!!", response.url)
+        for item in items:
+            yield item
+
+    def get_item(self, response, field_xpaths):
+        l = ItemLoader(item=PropertyItem(), selector=response)
+        l.default_output_processor = TakeFirst()
+
+        l.add_xpath()
+
+        # housekeeping
+        l.add_value("source", response.request.url)
+        l.add_value("project", self.settings.get("BOT_NAME"))
+        l.add_value("spider", self.name)
+        l.add_value("server", socket.gethostname())
+        l.add_value("dt", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+        yield l.load_item()
+
+
