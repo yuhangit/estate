@@ -238,7 +238,7 @@ class MysqlWriter(object):
                     ))
         elif isinstance(item, IndexItem):
 
-            stmt = """"insert into district_index_url(district_id, station_id, category_id, url) 
+            stmt = """insert into district_index_url(district_id, station_id, category_id, url) 
                     values(%s,%s,%s,%s)
             """
             tx.execute(stmt, (ids.get("district_id"), ids.get("station_id"), ids.get("category_id"), item.get("url")))
