@@ -181,7 +181,10 @@ class HTTPProxyMiddleware(object):
 
         self.remove_failed_proxy(request, spider)
 
-        return request.copy()
+        req = request.copy()
+        # add dont_filter to True other wise Scrapy will filter this request if it has process it
+        req.dont_filter = True
+        return req
 
     def process_response(self, request, response, spider):
         # really brutal filter
