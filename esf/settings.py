@@ -127,13 +127,15 @@ REQUESTS_HEADERS = {
 STORE_DATABASE = "data/esf_urls.db"
 
 
-CATEGORIES = {"经纪人": {"https://sh.5i5j.com/jingjiren/n0/": {"city_name": "上海", "station_name": "我爱我家", "category": "经纪人"},
-                        'https://sh.lianjia.com/jingjiren/': {"city_name": "上海", "station_name": "链家", "category": "经纪人"},
-                        'https://shanghai.anjuke.com/tycoon/': {"city_name": "上海", "station_name": "安居客", "category": "经纪人"},
-                        'http://shanghai.qfang.com/tycoon/o0': {"city_name": "上海", "station_name": "Q房网", "category": "经纪人"},
+CATEGORIES = {"经纪人": {
+                        # "https://sh.5i5j.com/jingjiren/n0/": {"city_name": "上海", "station_name": "我爱我家", "category": "经纪人"},
+                        # 'https://sh.lianjia.com/jingjiren/': {"city_name": "上海", "station_name": "链家", "category": "经纪人"},
+                        # 'https://shanghai.anjuke.com/tycoon/': {"city_name": "上海", "station_name": "安居客", "category": "经纪人"},
+                        # 'http://shanghai.qfang.com/tycoon/o0': {"city_name": "上海", "station_name": "Q房网", "category": "经纪人"},
                         'http://sh.ganji.com/fang/agent/': {"city_name": "上海","station_name": "赶集网", "category": "经纪人"},
-                        'http://esf.sh.fang.com/agenthome/': {"city_name": "上海","station_name": "房天下", "category": "经纪人"},
-                        'http://sh.centanet.com/jingjiren/': {"city_name": "上海","station_name": "中原地产", "category": "经纪人"}},
+                        # 'http://esf.sh.fang.com/agenthome/': {"city_name": "上海","station_name": "房天下", "category": "经纪人"},
+                        # 'http://sh.centanet.com/jingjiren/': {"city_name": "上海","station_name": "中原地产", "category": "经纪人"}
+                        },
              "新房": ['http://sh.centanet.com/xinfang/','http://newhouse.sh.fang.com/house/s/','http://sh.ganji.com/fang12/',
                               'http://shanghai.fangdd.com/loupan/','http://shanghai.qfang.com/newhouse/list',
                               'http://xf.house.163.com/sh/search/0-0-0-0-0-0-0-0-0-1-0-0-0-0-0-1-1-0-0-0-1.html',

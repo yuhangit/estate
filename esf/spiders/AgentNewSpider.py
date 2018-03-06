@@ -43,7 +43,7 @@ class AgentDistrictSpider(scrapy.Spider):
             district_urls = response.xpath('(//*[text()="不限"])[1]//ancestor::div[@class="option-list"]//a[not(text()="不限")]')
         # ganji
         if not district_urls:
-            self.logger.info("ganji/fangdd_esf/qfang/netease dist_name ...")
+            self.logger.info("ganji dist_name ...")
             district_urls = response.xpath('(//*[text()="不限"])[1]//ancestor::ul//a[not(text()="不限")]')
         # 58 商铺
         if not district_urls:
@@ -62,16 +62,17 @@ class AgentDistrictSpider(scrapy.Spider):
             self.logger.info("centanet dist_name ...")
             district_urls = response.xpath('(//*[text()="不限"])[1]//ancestor::p[@class="termcon fl"]//a[not(text()="不限")]')
         ###
-
+        station_name = response.meta.get("station_name")
         # exception handled
         if not district_urls:
             self.logger.error("!!!! url: %s not found any districts, checkout again this  !!!!", response.url)
             l = ItemLoader(item=DistrictItem())
             l.default_output_processor = TakeFirst()
-            l.add_value("dist_name", "nodef")
-            l.add_value("subdist_name", "nodef")
+            l.add_value("dist_name", None)
+            l.add_value("subdist_name", None)
             l.add_value("url", response.url)
             l.add_value("category", self.category)
+            l.add_value("station_name", station_name)
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -166,8 +167,9 @@ class AgentDistrictSpider(scrapy.Spider):
             subdistrict_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
             subdistrict = "".join(url.xpath('.//text()').extract()).strip()
             self.logger.info("subdistrict name: <%s>", subdist_name)
+
             # 子区域替换成区域
-            if subdist_name :
+            if city_name == "上海周边":
                 dist_name = subdistrict
             else:
                 subdist_name = subdistrict

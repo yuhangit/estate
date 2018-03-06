@@ -20,49 +20,87 @@ from scrapy import signals
 class SqlitePipeline(object):
     collection_name = "scrapy_items"
 
+    def retrieve_id(self, item):
+        category_id, station_id, district_id = None, None, None
+        self.logger.info("item contain: %s,%s,%s,%s,%s", item.get("category"), item.get("station_name"),
+                    item.get("city_name"), item.get("dist_name"), item.get("subdist_name"))
+        try:
+            with self.cnx.cursor() as cursor:
+                category_sql = "select category_id from category_rel where category_name = %s"
+                cursor.execute(category_sql, (item.get("category"),))
+                if cursor.rowcount > 0:
+                    category_id = cursor.fetchone()[0]
+
+                station_sql = "select station_id from estate.station_rel where station_name = %s"
+                cursor.execute(station_sql, (item.get("station_name"),))
+                if cursor.rowcount > 0:
+                    station_id = cursor.fetchone()[0]
+
+                district_sql = "select district_id from district_rel where city_name = %s and " \
+                               "dist_name = %s and subdist_name = %s"
+
+                cursor.execute(district_sql, (item.get("city_name"), item.get("dist_name"), item.get("subdist_name")))
+                if cursor.rowcount > 0:
+                    district_id = cursor.fetchone()[0]
+        except Exception as e:
+            self.logger.exception("error when retrieve id")
+
+        return {"category_id": category_id, "district_id": district_id, "station_id": station_id}
     def process_item(self, item, spider):
         self.logger.info("start pipelien %s process spider %s" %(self.collection_name, spider.name))
-        if isinstance(item, IndexItem):
-            stmt = '''
-                insert into index_pages(url, retrived, category,source, project, server, dt, spider) VALUES 
-                (?,?,?,?,?,?,?,?)
-            '''
-            self.cursor.execute(stmt,(item.get("url"),item.get("retrived"),item.get("category"),item.get("source"),
-                                      item.get("project"),item.get("server"),item.get("date"),item.get("spider")))
+        if isinstance(item, PropertyItem):
 
-        elif isinstance(item, PropertyItem):
-
-            stmt = '''insert into properties(title, url, price, address, dist_name,
-                        subdist_name, dt, source, project, server,spider,agent_name,
-                        agent_company,agent_phone,station_name,category, recent_activation) 
-                      values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
-            self.cursor.execute(stmt,(item.get("title"),item.get("url"),item.get("price"),
-                                      item.get("address"),item.get("dist_name"),item.get("subdist_name")
-                                      ,item.get("date"),item.get("source"), item.get("project")
-                                      ,item.get("server"),item.get("spider"),
-                                      item.get("agent_name"),item.get("agent_company"),item.get("agent_phone")
-                                      ,item.get("station_name"),item.get("category"),item.get("recent_activation")))
+            stmt = '''insert into properties_temp(title, url, price, address, source, project, server, dt,
+                          spider, agent_name, agent_company, agent_phone, recent_activation, 
+                          district_id, station_id, category_id) 
+                      values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
+            self.cursor.execute(stmt, (item.get("title"), item.get("url"), item.get("price"), item.get("address"),
+                              item.get("source"), item.get("project"), item.get("server"), item.get("dt"),
+                              item.get("spider"), item.get("agent_name"), item.get("agent_company"),
+                              item.get("agent_phone"), item.get("recent_activation"), ids.get("district_id")
+                              , ids.get("station_id"), ids.get("category_id")))
 
         elif isinstance(item, DistrictItem):
-            stmt = """insert into district_rel (dist_name, subdist_name, url,category,source, project, server, dt, spider)
-                        VALUES (?,?,?,?,?,?,?,?,?)
-            """
-            self.cursor.execute(stmt, (item.get("dist_name"), item.get("subdist_name"), item.get("url"),item.get("category")
-                                       ,item.get("source"),item.get("project"), item.get("server"), item.get("date")
-                                       ,item.get("spider")))
+            url_field = None
+            category = item.get("category")
+            if category == "新房":
+                url_field = "newhouse_url"
+            elif category == "二手房":
+                url_field = "secondhouse_url"
+            elif category == "商铺":
+                url_field = "shop_url"
+            elif category == "经纪人":
+                url_field = "agency_url"
+
+            if url_field:
+                stmt = """update district_rel set {} = %s,
+                              category_id = %s,
+                              station_id = %s
+                          where district_id = %s
+                """.format(url_field)
+                updated = self.cursor.execute(stmt, (
+                    item.get("url"), ids.get("category_id"), ids.get("station_id"), ids.get("district_id")
+                ))
+                if not updated:
+                    stmt = """insert into district_rel(city_name,dist_name,subdist_name,{})
+                                VALUES (%s,%s,%s,%s)""".format(url_field)
+                    self.cursor.execute(stmt, (
+                       item.get("city_name"), item.get("dist_name"), item.get("subdist_name"), item.get("url")
+                    ))
 
         elif isinstance(item, AgentItem):
-            stmt = """insert into agencies(name,company,address, dist_name,subdist_name, telephone, history_amount,recent_activation
-                          ,new_house_amount,second_house_amount,rent_house_amount,register_date,source, project, server, dt, spider)
-                      values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            stmt = """insert into agencies_temp(name, telephone, history_amount, recent_activation, source, project,
+                          spider, server, dt, second_house_amount, new_house_amount, rent_house_amount, company, 
+                          address, register_date, district_id, station_id, category_id)
+                      values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """
-            self.cursor.execute(stmt,(item.get("name"),item.get("company"),item.get("address") ,item.get("dist_name")
-                                      ,item.get("subdist_name"),item.get("telephone"),
-                                      item.get("history_amount"),item.get("recent_activation"),
-                                      item.get("new_house_amount"), item.get("second_house_amount"),item.get("rent_house_amount"),
-                                      item.get("register_date"),
-                                      item.get("source"),item.get("project"), item.get("server"), item.get("date"),item.get("spider")))
-
+            self.cursor.execute(stmt, (
+                item.get("name"), item.get("telephone"), item.get("history_amount"), item.get("recent_activation")
+                , item.get("source"), item.get("project"), item.get("spider"), item.get("server"), item.get("dt"),
+                item.get("second_house_amount"), item.get("new_house_amount"), item.get("recent_house_amount"),
+                item.get("company"), item.get("address"), item.get("register_date"), ids.get("district_id"),
+                ids.get("station_id"), ids.get("category_id")
+            ))
         self.cnx.commit()
         return item
 
@@ -167,22 +205,28 @@ class MysqlWriter(object):
 
         elif isinstance(item, DistrictItem):
             url_field = None
+            category_field = None
             category = item.get("category")
+
             if category == "新房":
                 url_field = "newhouse_url"
+                category_field = "category_id_newhouse"
             elif category == "二手房":
                 url_field = "secondhouse_url"
+                category_field = "category_id_secondhouse"
             elif category == "商铺":
                 url_field = "shop_url"
+                category_field = "category_id_shop"
             elif category == "经纪人":
                 url_field = "agency_url"
+                category_field = "category_id_agency"
 
             if url_field:
                 stmt = """update district_rel set {} = %s,
-                              category_id = %s,
+                              {} = %s,
                               station_id = %s
                           where district_id = %s
-                """.format(url_field)
+                """.format(url_field, category_field)
                 updated = tx.execute(stmt, (
                     item.get("url"), ids.get("category_id"), ids.get("station_id"), ids.get("district_id")
                 ))
