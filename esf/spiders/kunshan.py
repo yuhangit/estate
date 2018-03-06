@@ -14,7 +14,7 @@ import socket
 import datetime
 import pymysql
 import dj_database_url
-
+import chardet
 
 
 class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
@@ -33,6 +33,11 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
     )
 
     def parse_item(self,response):
+        # 检测 response 编码, 替换成utf-8
+        encoding = chardet.detect(response.body)['encoding']
+        if encoding != "utf-8":
+            response.body = response.body.decode(encoding,"replace").encode("utf-8")
+
         # agency table
         l = ItemLoader(item=AgentItem(), response=response)
         l.default_output_processor = TakeFirst()
