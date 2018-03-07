@@ -251,7 +251,7 @@ class SecondHouseDistrictSpider(BasicDistrictSpider):
 class SecondHousePropertySpider(BasicPropertySpider):
     name = "SecondHousePropertySpider"
     category = "二手房"
-    domains = "房多多"
+    domains = "58同城"
     nextpage_xpaths = {
         ".ganji.com": '//ul[@class="pageLink clearfix"]//a/@href',
         ".fang.com": '//div[@id="list_D10_15"]/a/@href',
