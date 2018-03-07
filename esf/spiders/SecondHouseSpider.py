@@ -13,7 +13,7 @@ import socket
 import datetime
 import sqlite3
 import re
-
+from bs4 import BeautifulSoup
 
 class SecondHouseDistrictSpider(BasicDistrictSpider):
     name = "SecondHouseDistrictSpider"
@@ -272,7 +272,8 @@ class SecondHousePropertySpider(BasicPropertySpider):
 
     domains_and_parsers = {
         ".fangdd.com": "parse_fangdd",
-        ".ganji.com": "parse_ganji"
+        ".ganji.com": "parse_ganji",
+        ".58.com": "parse_58",
     }
 
     def parse_fangdd(self, response):
@@ -377,22 +378,22 @@ class SecondHousePropertySpider(BasicPropertySpider):
 
         l = ItemLoader(item=PropertyItem(), selector=response)
         l.default_output_processor = TakeFirst()
-        l.add_xpath("title", '//div[@class="house-title"]/h1[@class="c_333 f20"]/text()')
-        l.add_value("url", response.url)
-        l.add_xpath("price", '//p[@class="house-basic-item1"]/span[@class="price"]/text()')
-        l.add_xpath("address",
-                    '(//span[@class="c_000 mr_10"][1]/a[1])[1]/text()|(//span[@class="c_000 mr_10"][1]/a[2])[1]/text()'
-                    '|//span[@class="c_000 mr_10"]/text()',
-                    Join(), MapCompose(lambda x: "".join(x.split())))
-        # l.add_xpath("district", '(//span[@class="c_000 mr_10"][1]/a[1])[2]/text()',
-        #            MapCompose(lambda x: x.strip()))
-        # l.add_xpath("subdistrict", '(//span[@class="c_000 mr_10"][1]/a[2])[2]/text()',
-        #            MapCompose(lambda x: x.strip()))
-        # l.add_xpath("agent_name", '//a[@class="c_000 agent-name-txt"]/text()', MapCompose(lambda x: x.strip()))
-        # l.add_xpath("agent_company", '//p[@class="agent-belong"]/text()')
-        l.add_xpath("agent_phone", '//p[@class="phone-num"]/text()')
-        # l.add_value("category_id_secondhouse", self.category_id_secondhouse)
-        l.add_value("station_name", "58")
+        # l.add_xpath("title", '//div[@class="house-title"]/h1[@class="c_333 f20"]/text()')
+        # l.add_value("url", response.url)
+        # l.add_xpath("price", '//p[@class="house-basic-item1"]/span[@class="price"]/text()')
+        # l.add_xpath("address",
+        #             '(//span[@class="c_000 mr_10"][1]/a[1])[1]/text()|(//span[@class="c_000 mr_10"][1]/a[2])[1]/text()'
+        #             '|//span[@class="c_000 mr_10"]/text()',
+        #             Join(), MapCompose(lambda x: "".join(x.split())))
+        # # l.add_xpath("district", '(//span[@class="c_000 mr_10"][1]/a[1])[2]/text()',
+        # #            MapCompose(lambda x: x.strip()))
+        # # l.add_xpath("subdistrict", '(//span[@class="c_000 mr_10"][1]/a[2])[2]/text()',
+        # #            MapCompose(lambda x: x.strip()))
+        # # l.add_xpath("agent_name", '//a[@class="c_000 agent-name-txt"]/text()', MapCompose(lambda x: x.strip()))
+        # # l.add_xpath("agent_company", '//p[@class="agent-belong"]/text()')
+        # l.add_xpath("agent_phone", '//p[@class="phone-num"]/text()')
+        # # l.add_value("category_id_secondhouse", self.category_id_secondhouse)
+        # l.add_value("station_name", "58")
 
         # ids
         self._load_ids(l, response)
