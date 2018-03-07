@@ -75,7 +75,7 @@ DOWNLOADER_MIDDLEWARES = {
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     # 'esf.pipelines.SqlitePipeline': 300,
-    'esf.pipelines.MysqlWriter': 400
+    # 'esf.pipelines.MysqlWriter': 400
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -152,7 +152,12 @@ CATEGORIES = {"经纪人": {
                         'http://shanghai.fangdd.com/esf/':{"city_name":"上海", "station_name": "房多多", "category": "二手房"},
                         'http://shanghai.qfang.com/sale':{"city_name":"上海", "station_name": "Q房网", "category": "二手房"}
                          },
-             "商铺": ["http://shop.sh.fang.com/",'http://sh.ganji.com/fang7/','http://sh.58.com/shangpucs/pn1/',]
+             "商铺": {
+                        "http://shop.sh.fang.com/":{"city_name":"上海","station_name": "房天下", "category": "商铺"},
+                        'http://sh.ganji.com/fang7/': {"city_name":"上海","station_name": "赶集网", "category": "商铺"},
+                        'http://sh.58.com/shangpucs/pn1/': {"city_name":"上海","station_name": "58同城", "category": "商铺"},
+                        # 'https://sh.xzl.anjuke.com/zu/?from=navigation': {"city_name":"上海","station_name": "安居客", "category": "商铺"},
+                    }
                   }
 # update partial urls of not equal 0
 REFRESH_URLS = 0
