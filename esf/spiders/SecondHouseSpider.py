@@ -233,4 +233,177 @@ class SecondHouseDistrictSpider(BasicDistrictSpider):
 #             yield l.load_item()
 
 class SecondHousePropertySpider(BasicPropertySpider):
+    name = "SecondHousePropertySpider"
     category = "二手房"
+    domains = "赶集网"
+    nextpage_xpaths = {
+        ".ganji.com": '//ul[@class="pageLink clearfix"]//a/@href',
+        ".fang.com": '//div[@id="list_D10_15"]/a/@href',
+        ".centanet.com": '//div[@class="pagerbox"]//a/@href',
+        ".58.com":  '//div[@class="pager"]/a/@href',
+        ".fangdd.com": '//div[@class="_2JZez"]/a[@data-analytics-track-event]/@href',
+        ".qfang.com": '//p[@class="turnpage_num"]/a/@href',
+    }
+
+    items_xpaths = {
+        ".ganji.com": '//dd[@class="dd-item title"]/a/@href',
+        ".fang.com":  '//p[@class="title"]/a/@href',
+        ".centanet.com": '//a[@class="cBlueB"]/@href',
+        ".58.com":  '//h2[@class="title"]/a/@href',
+        ".fangdd.com": '//div[@class="_2WyMa"]/a/@href',
+        ".qfang.com": '//p[@class="house-title"]/a/@href' ,
+    }
+
+    domains_and_parsers = {
+        ".fangdd.com": "parse_fangdd",
+        ".ganji.com": "parse_ganji"
+    }
+
+    def parse_fangdd(self, response):
+        self.logger.info("process fangdd url")
+
+        l = ItemLoader(item=PropertyItem(), selector=response)
+        l.default_output_processor = TakeFirst()
+        l.add_xpath("title", '//h1[@class="_3940o"]/text()')
+        l.add_value("url", response.url)
+        l.add_xpath("price", '//span[@class="_1A2vc _1nbqO"]/text()')
+        l.add_xpath("address", '//span[@class="V1q7v"]/span[@class="HtyCL"]/text()')
+        l.add_xpath("agent_name", '//span[@class="_2M6sV"]/text()')
+
+        # ids
+        self._load_ids(l, response)
+        # housekeeping
+        self._load_keephouse(l, response)
+
+        yield l.load_item()
+
+    def parse_ganji(self, response):
+        self.logger.info("process ganji url")
+
+        l = ItemLoader(item=PropertyItem(), selector=response)
+        l.default_output_processor = TakeFirst()
+        l.add_xpath("title", '//p[@class="card-title"]/i/text()')
+        l.add_value("url", response.url)
+        l.add_xpath("price", '//div[@class="price-wrap"]/span[1]/text()')
+        l.add_xpath("address",
+                    '(//li[@class="er-item f-fl"][1]/span[@class][2]/text()|//li[@class="er-item f-fl"][1]/span[@class][2]/a[@class="xiaoqu card-blue"])[2]/text()',
+                    Join(), MapCompose(lambda x: "".join(x.split())))
+        # l.add_xpath("district", '//span[@class="content"]/a[@class="blue"][1]/text()',
+        #            MapCompose(lambda x: x.strip()))
+        # l.add_xpath("subdistrict", '//span[@class="content"]/a[@class="blue"][2]/text()',
+        #            MapCompose(lambda x: x.strip()))
+        l.add_xpath("agent_name", '//p[@class="name"][1]/text()', MapCompose(lambda x: x.strip()))
+        l.add_xpath("agent_company", '//div[@class="user_other"]/span/text()')
+        l.add_xpath("agent_phone", '//div[@id="full_phone_show"]/@data-phone')
+        # l.add_value("category_id_secondhouse", self.category_id_secondhouse)
+        l.add_value("station_name", "赶集网")
+
+        # ids
+        self._load_ids(l, response)
+        # housekeeping
+        self._load_keephouse(l, response)
+
+        yield l.load_item()
+
+    def parse_centanet(self, response):
+        self.logger.info("process centanet url")
+
+        l = ItemLoader(item=PropertyItem(), selector=response)
+        l.default_output_processor = TakeFirst()
+        l.add_xpath("title", '//h5[@class="f18"]/text()')
+        l.add_value("url", response.url)
+        l.add_xpath("price", '//div[@class="roombase-price "]/span[@class="cRed"]/text()')
+        l.add_xpath("address", '(//li/div[@class="txt_r f666"])[6]/text()', MapCompose(lambda x: x.strip()))
+        # l.add_xpath("district", '//div[@class="fl breadcrumbs-area f000 "]/a[3]/text()', MapCompose(lambda x: x.strip()))
+        # l.add_xpath("subdistrict", '//div[@class="fl breadcrumbs-area f000 "]/a[4]/text()', MapCompose(lambda x: x.strip()))
+        l.add_xpath("agent_name", '//a[@class="f000 f18"]/b/text()')
+        l.add_xpath("agent_company", '(//p[@class="f333"])[1]/text()',
+                    Join(), MapCompose(lambda x: "".join(x.replace("：", "").split())))
+        l.add_xpath("recent_activation", '//p[@class="f333"]/span[@class="f666"][1]/text()',
+                    MapCompose(lambda x: int(x)), re=r"\d+")
+        # l.add_value("category_id_secondhouse", self.category_id_secondhouse)
+        l.add_value("station_name", "中原地产")
+
+        # ids
+        self._load_ids(l, response)
+        # housekeeping
+        self._load_keephouse(l, response)
+
+        yield l.load_item()
+
+    def parse_fang(self, response):
+        self.logger.info("process fang url")
+
+        l = ItemLoader(item=PropertyItem(), selector=response)
+        l.default_output_processor = TakeFirst()
+        l.add_xpath("title", '//div[@id="lpname"]/div[1]/text()')
+        l.add_value("url", response.url)
+        l.add_xpath("price", '//div[@class="trl-item price_esf  sty1"]/i/text()')
+        l.add_xpath("address", '//div[@class="rcont"]/a[@id="agantesfxq_C03_05"]/text()')
+        # l.add_xpath("district", '//div[@id="address"]/a[1]/text()',
+        #            MapCompose(lambda x: x.strip()))
+        # l.add_xpath("subdistrict", '//div[@id="address"]/a[2]/text()',
+        #            MapCompose(lambda x: x.strip()))
+        l.add_xpath("agent_name", '//span[@class="zf_jjname"]/a/text()')
+        l.add_xpath("agent_company", '//div[@class="tjcont-list-cline2"]/span[2]/text()')
+        l.add_xpath("agent_phone", '//div[@class="tjcont-list-cline3 font16"]/span/text()')
+        # l.add_value("category_id_secondhouse", self.category_id_secondhouse)
+
+        # ids
+        self._load_ids(l, response)
+        # housekeeping
+        self._load_keephouse(l, response)
+
+        yield l.load_item()
+
+    def parse_58(self, response):
+        self.logger.info("process 58 url")
+
+        l = ItemLoader(item=PropertyItem(), selector=response)
+        l.default_output_processor = TakeFirst()
+        l.add_xpath("title", '//div[@class="house-title"]/h1[@class="c_333 f20"]/text()')
+        l.add_value("url", response.url)
+        l.add_xpath("price", '//p[@class="house-basic-item1"]/span[@class="price"]/text()')
+        l.add_xpath("address",
+                    '(//span[@class="c_000 mr_10"][1]/a[1])[1]/text()|(//span[@class="c_000 mr_10"][1]/a[2])[1]/text()'
+                    '|//span[@class="c_000 mr_10"]/text()',
+                    Join(), MapCompose(lambda x: "".join(x.split())))
+        # l.add_xpath("district", '(//span[@class="c_000 mr_10"][1]/a[1])[2]/text()',
+        #            MapCompose(lambda x: x.strip()))
+        # l.add_xpath("subdistrict", '(//span[@class="c_000 mr_10"][1]/a[2])[2]/text()',
+        #            MapCompose(lambda x: x.strip()))
+        # l.add_xpath("agent_name", '//a[@class="c_000 agent-name-txt"]/text()', MapCompose(lambda x: x.strip()))
+        # l.add_xpath("agent_company", '//p[@class="agent-belong"]/text()')
+        l.add_xpath("agent_phone", '//p[@class="phone-num"]/text()')
+        # l.add_value("category_id_secondhouse", self.category_id_secondhouse)
+        l.add_value("station_name", "58")
+
+        # ids
+        self._load_ids(l, response)
+        # housekeeping
+        self._load_keephouse(l, response)
+
+        yield l.load_item()
+
+    def parse_qfang(self, response):
+        self.logger.info("process qfang url")
+
+        l = ItemLoader(item=PropertyItem(), selector=response)
+        l.default_output_processor = TakeFirst()
+        l.add_xpath("title", '//h2[@class="house-title fl"]/text()')
+        l.add_value("url", response.url)
+        l.add_xpath("price", '//p[@class="head-info-price  fl"]/span/text()')
+        l.add_xpath("address", '//p[@class="corresponding-con"]/a/text()')
+        # l.add_xpath("district", '//div[@class="r-b-a fl clearfix"]/p/a[1]/text()',
+        #            MapCompose(lambda x: x.strip()))
+        # l.add_xpath("subdistrict", '//div[@class="r-b-a fl clearfix"]/p/a[1]/text()',
+        #            MapCompose(lambda x: x.strip()))
+        l.add_xpath("agent_name", '//p[@class="name fl"]/a/text()')
+        # l.add_value("category_id_secondhouse", self.category_id_secondhouse)
+        l.add_value("station_name", "Q房网")
+
+        # ids
+        self._load_ids(l, response)
+        # housekeeping
+        self._load_keephouse(l, response)
+        yield l.load_item()

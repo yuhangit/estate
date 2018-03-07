@@ -1,18 +1,21 @@
 import dj_database_url
 from scrapy.utils.project import get_project_settings
 from scrapy.spiders import Rule
+from scrapy import signals
 from scrapy.linkextractors import LinkExtractor
+from scrapy.exceptions import NotConfigured
 from scrapy.loader.processors import TakeFirst, Join, MapCompose
 from scrapy.loader import ItemLoader
 from esf.items import IndexItem, PropertyItem, AgentItem
 from scrapy.utils.project import get_project_settings
 from scrapy.http import Request
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import scrapy
 import pymysql
 import socket
 import datetime
 import abc
+import traceback
 
 
 class DBConnect:
@@ -37,6 +40,13 @@ class DBConnect:
         return cnx
 
 
+def get_meta_info(meta):
+    info_field = ["city_name", "dist_name", "subdist_name",
+                  "category", "station_name", "district_id",
+                  "category_id", "station_id"]
+    return { k: v for k, v in meta.items() if k in info_field}
+
+
 class BasicDistrictSpider(scrapy.Spider):
 
     @property
@@ -57,11 +67,6 @@ class BasicDistrictSpider(scrapy.Spider):
         start_urls = get_project_settings().get("CATEGORIES").get(self.category)
         for url,meta in start_urls.items():
             yield Request(url=url, meta=meta, callback=self.parse_dist)
-
-    @staticmethod
-    def get_meta_info(meta):
-        info_field = ["city_name", "dist_name", "subdist_name", "category", "station_name"]
-        return { k: v for k, v in meta.items() if k in info_field}
 
     def parse_dist(self, response):
         district = []
@@ -99,7 +104,7 @@ class BasicDistrictSpider(scrapy.Spider):
 
             yield l.load_item()
 
-        meta = self.__class__.get_meta_info(response.meta)
+        meta = get_meta_info(response.meta)
         for url in district:
             district_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
             district_name = "".join(url.xpath('.//text()').extract()).strip().replace("区", "")
@@ -186,18 +191,13 @@ class BasicDistrictSpider(scrapy.Spider):
             yield l.load_item()
 
 
-class BasicPropertySpider(scrapy.spiders.CrawlSpider):
+class BasicPropertySpider(scrapy.Spider):
     __metaclass__ = abc.ABCMeta # abstract class method
 
-    @property
-    def category(self):
-        raise NotImplementedError
-    @property
-    def nextpage_xpaths(self):
-        raise NotImplementedError
-    @property
-    def items_xpaths(self):
-        raise NotImplementedError
+    category = None
+    domains = None
+    nextpage_xpaths = {}  # {".domain.com":"/path/to/a/@href",}
+    items_xpaths = {}  # {".domain.com":"/path/to/a/@href",}
 
     # 因每个主站的页面差距太大, 该方法不太通用
     # @property
@@ -209,6 +209,7 @@ class BasicPropertySpider(scrapy.spiders.CrawlSpider):
     #                      "css":[("field_name","css"),(),...]   }
     #     """
     #     raise NotImplementedError
+
     @property
     def domains_and_parsers(self):
         """主站名和解析方法构成字典, 格式如下:
@@ -220,17 +221,72 @@ class BasicPropertySpider(scrapy.spiders.CrawlSpider):
         """
         raise NotImplementedError
 
-    rules = (
-        Rule(LinkExtractor(restrict_xpaths=nextpage_xpaths)),
-        Rule(LinkExtractor(restrict_xpaths=items_xpaths), callback="parse_page")
-    )
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        attrs = ( cls.category , cls.nextpage_xpaths , cls.items_xpaths , cls.domains_and_parsers)
+        for attr in attrs:
+            if not attr:
+                raise NotConfigured("attribute not configure")
+        spider = cls(*args, **kwargs)
+        spider.settings = crawler.settings
+        spider.crawler = crawler
+        crawler.signals.connect(spider.close, signals.spider_closed)
+        return spider
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-        self.settings = get_project_settings()
+    def start_requests(self):
+        cnx = DBConnect.get_connect()
+        # get domains name
+        if not self.domains:
+            stmt = """select url ,district_id,category_id,station_id
+                          from estate.district_index_url 
+                          where category_id in (
+                            SELECT category_id 
+                            from estate.category_rel
+                            where category_name = %s
+                          )  and district_id is not NULL 
+                        """
+        else:
+            domain = "( %s )" % ",".join(map(lambda x: "'%s'" %x, self.domains)) if not isinstance(self.domains, str) else "('%s')" % self.domains
+            stmt = """select url,district_id,category_id,station_id
+                      from estate.district_index_url 
+                      where category_id in (
+                        SELECT category_id 
+                        from estate.category_rel
+                        where category_name = %s
+                      ) and station_id in (
+                        select station_id
+                        from estate.station_rel
+                        where station_name in {}
+                      ) and district_id is not NULL """.format(domain)
 
-    @abc.abstractclassmethod
-    def parse_page(self, response):
+        with cnx.cursor(pymysql.cursors.DictCursor) as cursor:
+            cursor.execute(stmt, (self.category,))
+            items = cursor.fetchall()
+        cnx.close()
+        for item in items:
+            url = item.pop("url")
+            meta = item
+            yield Request(url=url, meta=meta)
+
+    def parse(self, response):
+        meta = get_meta_info(response.meta)
+        for domain, xpath in self.nextpage_xpaths.items():
+            if domain in response.url:
+                nextpage_urls = response.xpath(xpath).extract()
+                for nextpage_url in nextpage_urls:
+                    url = urljoin(response.url, nextpage_url)
+                    self.logger.info("go to next page <%s> from source <%s>", url, response.url)
+                    yield Request(url=url, meta=meta, callback=self.parse)
+
+        for domain, xpath in self.items_xpaths.items():
+            if domain in response.url:
+                item_urls = response.xpath(xpath).extract()
+                for item_url in item_urls:
+                    url = urljoin(response.url, item_url)
+                    self.logger.info("parse property page <%s> from source <%s>", url, response.url)
+                    yield Request(url=url, meta=meta, callback=self.parse_items)
+
+    def parse_items(self, response):
         self.logger.info("process url: <%s>", response.url)
         items = []
 
@@ -239,13 +295,34 @@ class BasicPropertySpider(scrapy.spiders.CrawlSpider):
                 self.logger.info("parse <%s> url <%s>", domain, response.url)
                 default_parser = "parse_" + domain.split(".")[1]
                 attr = getattr(self, parser_method, default_parser)
-                items = attr(response)
+                try:
+                    items = attr(response)
+                except AttributeError:
+                    self.logger.error(traceback.format_exc())
                 break
 
         if not items:
             self.logger.error("!!!! url: %s not found any items, checkout again this  !!!!", response.url)
         for item in items:
             yield item
+
+    def _load_ids(self, itemloader, response):
+        "将response带来的id加载到itemloader中"
+        station_id = response.meta.get("station_id")
+        district_id = response.meta.get("district_id")
+        category_id = response.meta.get("category_id")
+
+        itemloader.add_value("district_id", district_id)
+        itemloader.add_value("station_id", station_id)
+        itemloader.add_value("category_id", category_id)
+
+    def _load_keephouse(self, itemloader, response):
+        "将辅助信息加载进itemloader中"
+        itemloader.add_value("source", response.request.url)
+        itemloader.add_value("project", self.settings.get("BOT_NAME"))
+        itemloader.add_value("spider", self.name)
+        itemloader.add_value("server", socket.gethostname())
+        itemloader.add_value("dt", datetime.datetime.utcnow())
 
     # def get_item(self, response, field_xpaths):
     #     l = ItemLoader(item=PropertyItem(), selector=response)

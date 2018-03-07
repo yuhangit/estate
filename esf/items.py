@@ -39,6 +39,10 @@ class PropertyItem(HouseKeepingItem):
     agent_phone = Field()
     recent_activation = Field()
 
+    district_id = Field()
+    station_id = Field()
+    category_id = Field()
+
 
 class IndexItem(HouseKeepingItem):
     url = Field()

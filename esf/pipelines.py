@@ -148,8 +148,15 @@ class MysqlWriter(object):
 
         try:
             # used for update dedicated field in district_rel
-
-            ids = self.retrieve_id(item)
+            if item.get("station_id") and item.get("category_id") and item.get("district_id"):
+                ids = {
+                    "category_id": item.get("category_id"),
+                    "district_id": item.get("district_id"),
+                    "station_id": item.get("station_id"),
+                }
+                self.logger.info("get ids from items %s" % ids)
+            else:
+                ids = self.retrieve_id(item)
             yield self.dbpool.runInteraction(self.do_insert, item, ids)
         except pymysql.OperationalError:
             if self.report_connection_error:
