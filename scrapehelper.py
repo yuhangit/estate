@@ -75,14 +75,10 @@ class BasicDistrictSpider(scrapy.Spider):
     def parse_dist(self, response):
         district = []
 
-        info = None
-        for xpath in self.dist_xpaths:
-            if not district:
-                district = response.xpath(xpath[0])
-                info = xpath[1]
-            else:
-                self.logger.info("find dist_name in [%s]", info)
-                break
+        for domain, xpath in self.dist_xpaths.items():
+            if domain in response.url:
+                district = response.xpath(xpath)
+
 
         city_name = response.meta.get("city_name")
         station_name = response.meta.get("station_name")
@@ -131,13 +127,9 @@ class BasicDistrictSpider(scrapy.Spider):
         subdistrict_urls = []
         info = None
 
-        for xpath in self.subdist_xpaths:
-            if not subdistrict_urls:
-                subdistrict_urls = response.xpath(xpath[0])
-                info = xpath[1]
-            else:
-                self.logger.info("find dist_name in [%s]", info)
-                break
+        for domain, xpath in self.subdist_xpaths.items():
+            if domain in response.url:
+                subdistrict_urls = response.xpath(xpath)
 
         city_name = response.meta.get("city_name")
         category = response.meta.get("category")

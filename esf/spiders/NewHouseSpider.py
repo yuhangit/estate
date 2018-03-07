@@ -20,20 +20,20 @@ class NewHouseDistrictSpider(BasicDistrictSpider):
     name = "NewHouseDistrictSpider"
 
     category = "新房"
-    dist_xpaths = [
-        ['//div[@class="termline clearfix"][1]/p[@class="termcon fl"]/a[not(text()="不限")]', "中原地产"],
-         ['//li[@id="quyu_name"]/a[not(text()="不限")]', '房天下'],
-        ['//ul[@class="f-clear"]//a[not(text()="不限")]',  '赶集网'],
-        ['//ul[@class="_3p3k4 _3MnR2"]//a[not(text()="不限")]', '房多多'],
-        ['//ul[@class="search-area-detail clearfix"]//a[not(text()="不限")]', 'Q房网'],
-    ]
-    subdist_xpaths = [
-        ['//p[@id="PanelBlock"]//a[not(text()="不限")]', '中原地产'],
-        ['//li[@id and @_fckxhtmljob="1"]/a', '房天下'],
-        ['//div[@class="fou-list f-clear"]//a[not(text()="不限")]', '赶集网'],
-        ['//ul[@class="_3p3k4 _2yGcr"]//a[not(text()="不限")]', '房多多'],
-        ['//ul[@class="search-area-second clearfix"]//a[not(text()="不限")]', 'Q房网']
-    ]
+    dist_xpaths = {
+         ".centanet.com":'//div[@class="termline clearfix"][1]/p[@class="termcon fl"]/a[not(text()="不限")]',
+        "fang.com": '//li[@id="quyu_name"]/a[not(text()="不限")]',
+        ".ganji.com": '//ul[@class="f-clear"]//a[not(text()="不限")]',
+        ".fangdd.com": '//ul[@class="_3p3k4 _3MnR2"]//a[not(text()="不限")]',
+        ".qfang.com": '//ul[@class="search-area-detail clearfix"]//a[not(text()="不限")]',
+    }
+    subdist_xpaths = {
+        ".centanet.com": '//p[@id="PanelBlock"]//a[not(text()="不限")]',
+        ".fang.com": '//li[@id and @_fckxhtmljob="1"]/a',
+        ".ganji.com": '//div[@class="fou-list f-clear"]//a[not(text()="不限")]',
+        ".fangdd.com": '//ul[@class="_3p3k4 _2yGcr"]//a[not(text()="不限")]',
+        ".qfang.com": '//ul[@class="search-area-second clearfix"]//a[not(text()="不限")]',
+    }
 
     # def start_requests(self):
     #     start_urls = get_project_settings().get("CATEGORIES")[self.category]
