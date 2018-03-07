@@ -34,6 +34,7 @@ class NewHouseDistrictSpider(BasicDistrictSpider):
         ['//ul[@class="_3p3k4 _2yGcr"]//a[not(text()="不限")]', '房多多'],
         ['//ul[@class="search-area-second clearfix"]//a[not(text()="不限")]', 'Q房网']
     ]
+
     # def start_requests(self):
     #     start_urls = get_project_settings().get("CATEGORIES")[self.category]
     #     for url,meta in start_urls.items():

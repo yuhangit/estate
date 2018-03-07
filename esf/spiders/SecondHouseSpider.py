@@ -7,7 +7,7 @@ from scrapy.utils.project import get_project_settings
 from scrapy.http import Request
 from esf.items import AgentItem,IndexItem,PropertyItem
 from scrapy.loader import ItemLoader
-from scrapehelper import BasicDistrictSpider, DBConnect
+from scrapehelper import BasicDistrictSpider, DBConnect, BasicPropertySpider
 from urllib.parse import urlparse,urlencode
 import socket
 import datetime
@@ -172,62 +172,65 @@ class SecondHouseDistrictSpider(BasicDistrictSpider):
             yield l.load_item()
 
 
-class SecondHouseIndexPageSpider(scrapy.spiders.CrawlSpider):
-    name = "SecondHouseIndexPageSpider"
+# class SecondHouseIndexPageSpider(scrapy.spiders.CrawlSpider):
+#     name = "SecondHouseIndexPageSpider"
+#     category = "二手房"
+#
+#     nextpage_xpaths = ['//div[@class="pagerbox"]' # centanet
+#                        ]
+#     items_xpaths = ['//a[@class="cBlueB"]' # centanet
+#                     ,
+#                     ]
+#     rules =(
+#         Rule(LinkExtractor(restrict_xpaths=nextpage_xpaths)),
+#         Rule(LinkExtractor(restrict_xpaths=items_xpaths),callback="parse_indexpage")
+#     )
+#
+#     def start_requests(self):
+#         with sqlite3.connect(get_project_settings().get("STORE_DATABASE")) as cnx:
+#             cursor = cnx.cursor()
+#             cursor.execute("", [self.category])
+#             url_infos = cursor.fetchall()
+#
+#         for url_info in url_infos:
+#             meta = {"dist_name":url_info[0],"subdist_name":url_info[1]}
+#             yield Request(url=url_info[2], meta=meta)
+#
+#     def parse_indexpage(self, response):
+#         self.logger.info("process url: <%s>", response.url)
+#         items = []
+#
+#         if ".centanet.com" in response.url:
+#             items = self.parse_centanet(response)
+#
+#         # exception handled
+#         if not items:
+#             self.logger.error("!!!! url: %s not found any items, checkout again this  !!!!", response.url)
+#         for item in items:
+#             yield item
+#
+#     def parse_centanet(self,response):
+#         self.logger.info("process centanet url")
+#         divs = response.xpath('//div[@class="house-item clearfix"]')
+#         for div in divs:
+#             l = ItemLoader(item=PropertyItem(), selector=div)
+#             l.default_output_processor = TakeFirst()
+#             l.add_xpath("title", '//dl[@class="fl roominfor"]//h5/text()')
+#             l.add_xpath("dist_name", '//div[@class="fl breadcrumbs-area f000 "]//a[@class="f000"])[3]/text()', MapCompose(lambda x: x.strip()))
+#             l.add_xpath("subdist_name", '//div[@class="fl breadcrumbs-area f000 "]//a[@class="f000"])[4]/text()', MapCompose(lambda x: x.strip()))
+#             l.add_xpath("agent_name", '//a[@class="f000 f18"]/b/text()')
+#             l.add_xpath("recent_activation", '//p[@class="f333"]/span[@class="f666"][1]/text()',
+#                         MapCompose(lambda x: int(x)), re=r"\d+")
+#             l.add_value("category", self.category)
+#
+#             # housekeeping
+#             l.add_value("source", response.url)
+#             l.add_value("project", self.settings.get("BOT_NAME"))
+#             l.add_value("spider", self.name)
+#             l.add_value("server", socket.gethostname())
+#             l.add_value("date", datetime.datetime.utcnow())
+#
+#             yield l.load_item()
+
+class SecondHousePropertySpider(BasicPropertySpider):
     category = "二手房"
-
-    nextpage_xpaths = ['//div[@class="pagerbox"]' # centanet
-                       ]
-    items_xpaths = ['//a[@class="cBlueB"]' # centanet
-                    ,
-                    ]
-    rules =(
-        Rule(LinkExtractor(restrict_xpaths=nextpage_xpaths)),
-        Rule(LinkExtractor(restrict_xpaths=items_xpaths),callback="parse_indexpage")
-    )
-
-    def start_requests(self):
-        with sqlite3.connect(get_project_settings().get("STORE_DATABASE")) as cnx:
-            cursor = cnx.cursor()
-            cursor.execute("", [self.category])
-            url_infos = cursor.fetchall()
-
-        for url_info in url_infos:
-            meta = {"dist_name":url_info[0],"subdist_name":url_info[1]}
-            yield Request(url=url_info[2], meta=meta)
-
-    def parse_indexpage(self, response):
-        self.logger.info("process url: <%s>", response.url)
-        items = []
-
-        if ".centanet.com" in response.url:
-            items = self.parse_centanet(response)
-
-        # exception handled
-        if not items:
-            self.logger.error("!!!! url: %s not found any items, checkout again this  !!!!", response.url)
-        for item in items:
-            yield item
-
-    def parse_centanet(self,response):
-        self.logger.info("process centanet url")
-        divs = response.xpath('//div[@class="house-item clearfix"]')
-        for div in divs:
-            l = ItemLoader(item=PropertyItem(), selector=div)
-            l.default_output_processor = TakeFirst()
-            l.add_xpath("title", '//dl[@class="fl roominfor"]//h5/text()')
-            l.add_xpath("dist_name", '//div[@class="fl breadcrumbs-area f000 "]//a[@class="f000"])[3]/text()', MapCompose(lambda x: x.strip()))
-            l.add_xpath("subdist_name", '//div[@class="fl breadcrumbs-area f000 "]//a[@class="f000"])[4]/text()', MapCompose(lambda x: x.strip()))
-            l.add_xpath("agent_name", '//a[@class="f000 f18"]/b/text()')
-            l.add_xpath("recent_activation", '//p[@class="f333"]/span[@class="f666"][1]/text()',
-                        MapCompose(lambda x: int(x)), re=r"\d+")
-            l.add_value("category", self.category)
-
-            # housekeeping
-            l.add_value("source", response.url)
-            l.add_value("project", self.settings.get("BOT_NAME"))
-            l.add_value("spider", self.name)
-            l.add_value("server", socket.gethostname())
-            l.add_value("date", datetime.datetime.utcnow())
-
-            yield l.load_item()

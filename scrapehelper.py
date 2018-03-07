@@ -122,7 +122,7 @@ class BasicDistrictSpider(scrapy.Spider):
         subdistrict_urls = []
         info = None
 
-        for xpath in self.dist_xpaths:
+        for xpath in self.subdist_xpaths:
             if not subdistrict_urls:
                 subdistrict_urls = response.xpath(xpath[0])
                 info = xpath[1]
@@ -160,7 +160,7 @@ class BasicDistrictSpider(scrapy.Spider):
 
         for url in subdistrict_urls:
             subdistrict_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
-            subdistrict = "".join(url.xpath('.//text()').extract()).strip()
+            subdistrict = "".join(url.xpath('.//text()').extract()).strip().replace("区", "")
             self.logger.info("subdistrict name: <%s>", subdist_name)
 
             # 子区域替换成区域
@@ -200,13 +200,24 @@ class BasicPropertySpider(scrapy.spiders.CrawlSpider):
     def items_xpaths(self):
         raise NotImplementedError
 
+    # 因每个主站的页面差距太大, 该方法不太通用
+    # @property
+    # def domains_and_parsers(self):
+    #     """由主站名称(.example.com)和解析字段({'type':["field_name","xpath"]})构成的列表
+    #     , 用于解析具体页面, 格式如下:
+    #     { ".example.com":{"xpath":[("field_name":"xpath"),(),...},
+    #                      "value":[("field_name","value"),(),...],
+    #                      "css":[("field_name","css"),(),...]   }
+    #     """
+    #     raise NotImplementedError
     @property
     def domains_and_parsers(self):
-        """由主站名称(.example.com)和解析字段({'type':["field_name","xpath"]})构成的列表
-        , 用于解析具体页面, 格式如下:
-        { ".example.com":{"xpath":[("field_name":"xpath"),(),...},
-                         "value":[("field_name","value"),(),...],
-                         "css":[("field_name","css"),(),...]   }
+        """主站名和解析方法构成字典, 格式如下:
+            domain name 格式: .domain.root
+            {".example.com":"parse_example",
+            ".baidu.com":"parse_baidu",
+            ...
+            }
         """
         raise NotImplementedError
 
@@ -224,10 +235,12 @@ class BasicPropertySpider(scrapy.spiders.CrawlSpider):
         self.logger.info("process url: <%s>", response.url)
         items = []
 
-        for domain, field_xpaths in self.domains_and_parsers.items():
+        for domain, parser_method in self.domains_and_parsers.items():
             if domain in response.url :
                 self.logger.info("parse <%s> url <%s>", domain, response.url)
-                items = self.get_item(response, field_xpaths)
+                default_parser = "parse_" + domain.split(".")[1]
+                attr = getattr(self, parser_method, default_parser)
+                items = attr(response)
                 break
 
         if not items:
@@ -235,25 +248,25 @@ class BasicPropertySpider(scrapy.spiders.CrawlSpider):
         for item in items:
             yield item
 
-    def get_item(self, response, field_xpaths):
-        l = ItemLoader(item=PropertyItem(), selector=response)
-        l.default_output_processor = TakeFirst()
-
-        for type,field in field_xpaths.items():
-            if type == "xpath":
-                l.add_xpath(field[0],field[1])
-            elif type == "value":
-                l.add_value(field[0],field[1])
-            elif type == "css":
-                l.add_css(field[0],field[1])
-
-        # housekeeping
-        l.add_value("source", response.request.url)
-        l.add_value("project", self.settings.get("BOT_NAME"))
-        l.add_value("spider", self.name)
-        l.add_value("server", socket.gethostname())
-        l.add_value("dt", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-        yield l.load_item()
+    # def get_item(self, response, field_xpaths):
+    #     l = ItemLoader(item=PropertyItem(), selector=response)
+    #     l.default_output_processor = TakeFirst()
+    #
+    #     for type,field in field_xpaths.items():
+    #         if type == "xpath":
+    #             l.add_xpath(field[0],field[1])
+    #         elif type == "value":
+    #             l.add_value(field[0],field[1])
+    #         elif type == "css":
+    #             l.add_css(field[0],field[1])
+    #
+    #     # housekeeping
+    #     l.add_value("source", response.request.url)
+    #     l.add_value("project", self.settings.get("BOT_NAME"))
+    #     l.add_value("spider", self.name)
+    #     l.add_value("server", socket.gethostname())
+    #     l.add_value("dt", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    #
+    #     yield l.load_item()
 
 

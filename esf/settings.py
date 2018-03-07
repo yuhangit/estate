@@ -75,7 +75,7 @@ DOWNLOADER_MIDDLEWARES = {
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     # 'esf.pipelines.SqlitePipeline': 300,
-    # 'esf.pipelines.MysqlWriter': 400
+    'esf.pipelines.MysqlWriter': 400
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -142,7 +142,7 @@ CATEGORIES = {"经纪人": {
                         'http://sh.ganji.com/fang12/': {"city_name": "上海", "station_name": "赶集网", "category": "新房"},
                         'http://shanghai.fangdd.com/loupan/': {"city_name": "上海", "station_name": "房多多", "category": "新房"},
                         'http://shanghai.qfang.com/newhouse/list': {"city_name": "上海", "station_name": "Q房网", "category": "新房"},
-                        # 'http://xf.house.163.com/sh/search/0-0-0-0-0-0-0-0-0-1-0-0-0-0-0-1-1-0-0-0-1.html': {"city_name": "上海", "station_name": "网易房产", "category": "新房"}  # JavaScript event code,
+                        #'http://xf.house.163.com/sh/search/0-0-0-0-0-0-0-0-0-1-0-0-0-0-0-1-1-0-0-0-1.html': {"city_name": "上海", "station_name": "网易房产", "category": "新房"}  # JavaScript event code,
                         },
              "二手房": {'http://sh.centanet.com/ershoufang/':{"city_name":"上海","station_name": "中原地产", "category": "二手房"},
                         'http://esf.sh.fang.com/':{"city_name":"上海", "station_name": "房天下", "category": "二手房"},
