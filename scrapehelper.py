@@ -49,19 +49,23 @@ def get_meta_info(meta):
 
 class BasicDistrictSpider(scrapy.Spider):
 
-    @property
-    def category(self):
-        raise NotImplementedError("house category: newhouse, secondhouse ect")
+    category = None
+    dist_xpaths = {}
+    subdist_xpaths = {}
+    name = None
 
-    @property
-    def dist_xpaths(self):
-        raise NotImplementedError("dist_xpaths must be iterable")
-    @property
-    def subdist_xpaths(self):
-        raise NotImplementedError("subdist_xpaths must be iterable")
-    @property
-    def name(self):
-        raise NotImplementedError
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        attrs = (cls.category, cls.name, cls.dist_xpaths, cls.subdist_xpaths)
+        for attr in attrs:
+            if not attr:
+                raise NotConfigured("attribute not configure")
+        spider = cls(*args, **kwargs)
+        spider.settings = crawler.settings
+        spider.crawler = crawler
+        crawler.signals.connect(spider.close, signals.spider_closed)
+        return spider
+
 
     def start_requests(self):
         start_urls = get_project_settings().get("CATEGORIES").get(self.category)
