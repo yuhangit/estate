@@ -302,7 +302,7 @@ class BasicPropertySpider(scrapy.Spider):
             self.logger.error("!!!! url: %s not found any items, checkout again this  !!!!", response.url)
             # save failed html for analysis
             with open("./failed_html/%s_%s.html" %
-                      (urlparse(response.url).domain, os.path.basename(os.path.splitext(urlparse(response.url).path)[0])), "w") as f:
+                      (urlparse(response.url).hostname, os.path.basename(os.path.splitext(urlparse(response.url).path)[0])), "w") as f:
                 f.write(response.text)
 
         for item in items:
