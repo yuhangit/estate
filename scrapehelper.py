@@ -193,8 +193,8 @@ class BasicPropertySpider(scrapy.Spider):
 
     category = None
     domains = None
-    nextpage_xpaths = {}  # {".domain.com":"/path/to/a/@href",}
-    items_xpaths = {}  # {".domain.com":"/path/to/a/@href",}
+    nextpage_xpaths = {}  # {".domain.com":"/path/to/a/@href",} 可以有多个,
+    items_xpaths = {}  # {".domain.com":"/path/to/a/@href",} 可以有多个
 
     # 因每个主站的页面差距太大, 该方法不太通用
     # @property
@@ -206,17 +206,18 @@ class BasicPropertySpider(scrapy.Spider):
     #                      "css":[("field_name","css"),(),...]   }
     #     """
     #     raise NotImplementedError
+    """
+    主站名和解析方法构成字典, 格式如下:
+    只能有一个, 若找不到, 默认为parse_domain.
+    domain name 格式: .domain.root
+    {".example.com":"parse_example",
+        ".baidu.com":"parse_baidu",
+        ...
+        }
+    """
+    domains_and_parsers = {}
 
-    @property
-    def domains_and_parsers(self):
-        """主站名和解析方法构成字典, 格式如下:
-            domain name 格式: .domain.root
-            {".example.com":"parse_example",
-            ".baidu.com":"parse_baidu",
-            ...
-            }
-        """
-        raise NotImplementedError
+
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -297,6 +298,16 @@ class BasicPropertySpider(scrapy.Spider):
                 except AttributeError:
                     self.logger.error(traceback.format_exc())
                 break
+        else:
+            url_doamin = urlparse(response.url).hostname.split(".")[-1]
+            if url_doamin in ("com",):
+                url_doamin = urlparse(response.url).hostname.split(".")[-2]
+            default_parser = "parse_" + url_doamin
+            attr = getattr(self, default_parser)
+            try:
+                items = attr(response)
+            except Exception:
+                self.logger.error(traceback.format_exc())
 
         if not items:
             self.logger.error("!!!! url: %s not found any items, checkout again this  !!!!", response.url)

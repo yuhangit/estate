@@ -251,7 +251,7 @@ class SecondHouseDistrictSpider(BasicDistrictSpider):
 class SecondHousePropertySpider(BasicPropertySpider):
     name = "SecondHousePropertySpider"
     category = "二手房"
-    domains = "58同城"
+    domains = "房天下"
     nextpage_xpaths = {
         ".ganji.com": '//ul[@class="pageLink clearfix"]//a/@href',
         ".fang.com": '//div[@id="list_D10_15"]/a/@href',
@@ -330,7 +330,7 @@ class SecondHousePropertySpider(BasicPropertySpider):
         l.add_xpath("title", '//h5[@class="f18"]/text()')
         l.add_value("url", response.url)
         l.add_xpath("price", '//div[@class="roombase-price "]/span[@class="cRed"]/text()')
-        l.add_xpath("address", '(//li/div[@class="txt_r f666"])[6]/text()', MapCompose(lambda x: x.strip()))
+        l.add_xpath("address", '(//li/div[@class="txt_r f666"])[6]/text()', MapCompose(lambda x: "".join(x.strip().split())))
         # l.add_xpath("district", '//div[@class="fl breadcrumbs-area f000 "]/a[3]/text()', MapCompose(lambda x: x.strip()))
         # l.add_xpath("subdistrict", '//div[@class="fl breadcrumbs-area f000 "]/a[4]/text()', MapCompose(lambda x: x.strip()))
         l.add_xpath("agent_name", '//a[@class="f000 f18"]/b/text()')
@@ -339,7 +339,7 @@ class SecondHousePropertySpider(BasicPropertySpider):
         l.add_xpath("recent_activation", '//p[@class="f333"]/span[@class="f666"][1]/text()',
                     MapCompose(lambda x: int(x)), re=r"\d+")
         # l.add_value("category_id_secondhouse", self.category_id_secondhouse)
-        l.add_value("station_name", "中原地产")
+        # l.add_value("station_name", "中原地产")
 
         # ids
         self._load_ids(l, response)
