@@ -20,15 +20,15 @@ class ShopDistrictSpider(BasicDistrictSpider):
     name = "ShopDistrictSpider"
     category_name = "商铺"
     dist_xpaths = {
-        # ".fang.com": '//div[@id="list_38"]//a[not(text()="不限")]',
-        # ".ganji.com": '//div[@class="thr-list"]//a[not(text()="不限")]',
-        # ".58.com": '//dl[@class="secitem"][1]/dd[1]/a[not(contains(text(),"全上海")) and @para="local"]',
+        ".fang.com": '//div[@id="list_38"]//a[not(text()="不限")]',
+        ".ganji.com": '//div[@class="thr-list"]//a[not(text()="不限")]',
+        ".58.com": '//dl[@class="secitem"][1]/dd[1]/a[not(contains(text(),"全上海")) and @para="local"]',
         ".anjuke.com": '(//div[@class="elems-l"]/a[@class="selected-item"])[1]/ancestor::div[@class="elems-l"]/a[not(@rel="nofollow") and not(@class="selected-item")]',
     }
     subdist_xpaths = {
-        # ".fang.com": '//p[@id="shangQuancontain"]/a[not(text()="不限")]',
-        # ".ganji.com": '//div[@class="fou-list f-clear"]/a',
-        # ".58.com": '//div[@id="qySelectSecond"]//a',
+        ".fang.com": '//p[@id="shangQuancontain"]/a[not(text()="不限")]',
+        ".ganji.com": '//div[@class="fou-list f-clear"]/a',
+        ".58.com": '//div[@id="qySelectSecond"]//a',
         ".anjuke.com": '//div[@class="sub-items"]/a[not(@class="selected-item")]',
     }
 

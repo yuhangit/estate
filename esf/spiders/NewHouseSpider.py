@@ -187,13 +187,9 @@ class NewHousePropertySpider(BasicPropertySpider):
         l.add_xpath("agent_company", '//li[@class="tf cl_333"]/a/text()')
         # l.add_value("category_id_shop", self.category_id_shop)
         # l.add_value("station_name", "房天下")
-        l.add_value("city_name", "上海")
-        l.add_value("dist_name", "普陀")
-        l.add_value("subdist_name", "长风")
         # category_name
         # station_name
         # ids
-        self._load_ids(l, response, ["district_id"])
         # housekeeping
         self._load_keephouse(l, response)
 
@@ -212,8 +208,7 @@ class NewHousePropertySpider(BasicPropertySpider):
         l.add_xpath("agent_name", '//p[@class="name"]/text()', MapCompose(lambda x: x.strip()))
         l.add_xpath("agent_company", '//span[@clas="company"]/text()')
         l.add_xpath("agent_phone", '//a[@class="phone_num js_person_phone"]/text()')
-        # l.add_value("category_id_secondhouse", self.category_id_secondhouse)
-        # l.add_value("station_name", "赶集网")
+
 
         # ids
         self._load_ids(l, response)

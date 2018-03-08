@@ -158,6 +158,7 @@ class MysqlWriter(object):
             if all_ids:
                 ids.update(self.retrieve_id(item, all_ids))
             # raise NotConfigured
+            item.update(ids)
             yield self.dbpool.runInteraction(self.do_insert, item, ids)
         except pymysql.OperationalError:
             if self.report_connection_error:
