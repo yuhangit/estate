@@ -154,8 +154,6 @@ class MysqlWriter(object):
             # !!! make a copy otherwise source list will be empty
             PROPERTY_IDS = self.settings.get("PROPERTY_IDS")
             all_ids = deepcopy(PROPERTY_IDS)
-            self.logger.info("all ids : %s", all_ids)
-            self.logger.info("district_id: %s", item.get("district_id"))
             # cant use all_ids in for loop depending it's mutable nature
             for _id in PROPERTY_IDS:
                 if item.get(_id):
@@ -178,7 +176,7 @@ class MysqlWriter(object):
         defer.returnValue(item)
 
     def retrieve_id(self, item, retrieved_ids):
-        self.logger.info(retrieved_ids)
+        self.logger.info("retireved ids: %s",retrieved_ids)
         retrieved_items = {}
         try:
             with self.cnx.cursor() as cursor:
