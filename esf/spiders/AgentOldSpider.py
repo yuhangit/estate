@@ -8,6 +8,7 @@ from scrapy.http import Request
 from esf.items import AgentItem, DistrictItem,IndexItem
 from scrapy.loader import ItemLoader
 from scrapehelper import DBConnect,BasicDistrictSpider
+from scrapehelper import get_meta_info
 from urllib.parse import urlparse,urlencode
 import socket
 import datetime
@@ -22,7 +23,7 @@ class AgentOldDistrictSpider(BasicDistrictSpider):
     start_urls = get_project_settings().get("CATEGORIES")[category_name]
 
     def start_requests(self):
-        for url,meta in self.start_urls.items():
+        for url, meta in self.start_urls.items():
             yield Request(url, meta=meta)
 
     def parse(self, response):
@@ -86,7 +87,7 @@ class AgentOldDistrictSpider(BasicDistrictSpider):
 
             yield l.load_item()
 
-        meta = self.get_meta_info(response.meta)
+        meta = get_meta_info(response.meta)
         for url in district_urls:
             district_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
             district_name = "".join(url.xpath('.//text()').extract()).strip().replace("区", "")

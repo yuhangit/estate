@@ -15,6 +15,7 @@ import sqlite3
 import re
 from bs4 import BeautifulSoup
 
+
 class SecondHouseDistrictSpider(BasicDistrictSpider):
     name = "SecondHouseDistrictSpider"
     category_name = "二手房"

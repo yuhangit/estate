@@ -39,6 +39,7 @@ class AgentDistrictSpider(BasicDistrictSpider):
         ".5i5j.com": '//dd[@class="block"]//a',
     }
 
+
 class AgentPropertySpider(BasicPropertySpider):
     name = "AgentPropertySpider"
     category = "经纪人"
