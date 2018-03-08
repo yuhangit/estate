@@ -16,8 +16,8 @@ import re
 import pymysql
 
 
-class AgentDistrictSpider(BasicDistrictSpider):
-    name = "AgentDistrictSpider"
+class AgentOldDistrictSpider(BasicDistrictSpider):
+    name = "AgentOldDistrictSpider"
     category_name = "经纪人"
     start_urls = get_project_settings().get("CATEGORIES")[category_name]
 
