@@ -144,7 +144,7 @@ class NewHousePropertySpider(BasicPropertySpider):
         ".ganji.com": '//ul[@class="pageLink clearfix"]//a/@href',
         ".fang.com": '//li[@class="fr"]/a/@href',
         ".fangdd.com": '//div[@class="ZDLI8"]/a/@href',
-        ".qfang.com": '//p[@class="turnpage_num fr"]/a/@href',
+        ".qfang.com": '//p[@class="turnpage_num fr"]/a[not(@class="cur")]',
     }
     items_xpaths = {
         ".centanet.com": '//h5[@class="room-name"]/a/@href',
