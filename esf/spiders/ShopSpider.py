@@ -94,7 +94,7 @@ class ShopPropertySpider(BasicPropertySpider):
         l.add_xpath("agent_company", '//span[@clas="company"]/text()', Join(), MapCompose(lambda x: "".join(x.split())))
         l.add_xpath("agent_phone", '//div[@class="phone"]/a/text()')
         # l.add_value("category_id_secondhouse", self.category_id_secondhouse)
-        l.add_value("station_name", "赶集网")
+        # l.add_value("station_name", "赶集网")
 
         # ids
         self._load_ids(l, response)
@@ -118,14 +118,12 @@ class ShopPropertySpider(BasicPropertySpider):
         # l.add_xpath("agent_company", '//span[@class="f14 c_333 jjrsay"]/text()')
         l.add_xpath("agent_phone", '//p[@class="phone-num"]/text()')
         # l.add_value("category_id_secondhouse", self.category_id_secondhouse)
-        l.add_value("station_name", "58同城")
+        # l.add_value("station_name", "58同城")
 
+        # ids
+        self._load_ids(l, response)
         # housekeeping
-        l.add_value("source", response.request.url)
-        l.add_value("project", self.settings.get("BOT_NAME"))
-        l.add_value("spider", self.name)
-        l.add_value("server", socket.gethostname())
-        l.add_value("dt", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        self._load_keephouse(l, response)
 
         yield l.load_item()
 
@@ -143,7 +141,7 @@ class ShopPropertySpider(BasicPropertySpider):
         l.add_xpath("agent_company", '//p[@class="comp_info"]/a/text()',
                     Join(), MapCompose(lambda x: "".join(x.split())))
         # l.add_value("category_id_secondhouse", self.category_id_secondhouse)
-        l.add_value("station_name", "安居客")
+        # l.add_value("station_name", "安居客")
 
         # ids
         self._load_ids(l, response)
