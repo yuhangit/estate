@@ -154,6 +154,7 @@ class MysqlWriter(object):
             # !!! make a copy otherwise source list will be empty
             all_ids = deepcopy(self.settings.get("PROPERTY_IDS"))
             self.logger.info("all ids : %s", all_ids)
+            self.logger.info("district_id: %s", item.get("district_id"))
             for _id in all_ids:
                 if item.get(_id):
                     ids.update(((_id, item.get(_id)), ))
