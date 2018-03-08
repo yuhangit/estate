@@ -46,7 +46,7 @@ class SqlitePipeline(object):
             self.logger.exception("error when retrieve id")
 
         return {"category_id": category_id, "district_id": district_id, "station_id": station_id}
-    def process_item(self, item, spider):
+    def process_item(self, item, spider, ids):
         self.logger.info("start pipelien %s process spider %s" %(self.collection_name, spider.name))
         if isinstance(item, PropertyItem):
 
@@ -155,15 +155,9 @@ class MysqlWriter(object):
                 if item.get(_id):
                     ids.update(((_id, item.get(_id)), ))
                     all_ids.remove(_id)
-                    self.logger.info("get %s from item <%s>" % (_id, item))
-
-            self.logger.info("="*32 +"ids are %s" + "="*32, ids)
             if all_ids:
                 ids.update(self.retrieve_id(item, all_ids))
-
-            self.logger.info("="*32+ "ids are %s" + "="*32, ids)
             # raise NotConfigured
-
             yield self.dbpool.runInteraction(self.do_insert, item, ids)
         except pymysql.OperationalError:
             if self.report_connection_error:

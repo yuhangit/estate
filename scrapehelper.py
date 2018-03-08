@@ -217,8 +217,6 @@ class BasicPropertySpider(scrapy.Spider):
     """
     domains_and_parsers = {}
 
-
-
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
         attrs = ( cls.category_name , cls.nextpage_xpaths , cls.items_xpaths)
@@ -336,7 +334,6 @@ class BasicPropertySpider(scrapy.Spider):
         for _id in ids:
             if _id not in skipped_ids:
                 itemloader.add_value(_id, response.meta.get(_id))
-
 
     def _load_keephouse(self, itemloader, response):
         "将辅助信息加载进itemloader中"

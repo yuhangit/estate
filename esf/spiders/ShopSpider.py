@@ -18,7 +18,7 @@ import re
 # cannot use CrawlSpider for lack pass meta between rules
 class ShopDistrictSpider(BasicDistrictSpider):
     name = "ShopDistrictSpider"
-    category = "商铺"
+    category_name = "商铺"
     dist_xpaths = {
         # ".fang.com": '//div[@id="list_38"]//a[not(text()="不限")]',
         # ".ganji.com": '//div[@class="thr-list"]//a[not(text()="不限")]',
@@ -32,10 +32,11 @@ class ShopDistrictSpider(BasicDistrictSpider):
         ".anjuke.com": '//div[@class="sub-items"]/a[not(@class="selected-item")]',
     }
 
+
 class ShopPropertySpider(BasicPropertySpider):
     name = "ShopPropertySpider"
     category = "商铺"
-    domains = "安居客"
+    # domains = "安居客"
     nextpage_xpaths = {
         ".fang.com": '//div[@class="fanye gray6"]/a/@href',
         ".ganji.com": '//ul[@class="pageLink clearfix"]//a/@href',
@@ -70,7 +71,7 @@ class ShopPropertySpider(BasicPropertySpider):
         l.add_xpath("agent_company", '//dd[@class="black"]/a/text()', Join(), MapCompose(lambda x: "".join(x.split())))
         l.add_xpath("agent_phone", '//div[@class="phone_top"]//label[@id="mobilecode"]/text()')
         # l.add_value("category_id_shop", self.category_id_shop)
-        l.add_value("station_name", "房天下")
+        # l.add_value("station_name", "房天下")
 
         # ids
         self._load_ids(l, response)
