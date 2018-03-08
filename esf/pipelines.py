@@ -162,7 +162,7 @@ class MysqlWriter(object):
                 ids.update(self.retrieve_id(item, all_ids))
 
             self.logger.info("="*32+ "ids are %s" + "="*32, ids)
-            raise NotConfigured
+            # raise NotConfigured
 
             yield self.dbpool.runInteraction(self.do_insert, item, ids)
         except pymysql.OperationalError:
@@ -172,7 +172,7 @@ class MysqlWriter(object):
                 self.__init__(self.mysql_url)
         except:
             self.logger.exception(traceback.format_exc()+ "\n%s", item.get("url") or item.get("source") or "no url")
-            raise
+            # raise
         defer.returnValue(item)
 
     def retrieve_id(self, item, retrieved_ids):
