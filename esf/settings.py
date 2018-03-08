@@ -128,41 +128,45 @@ STORE_DATABASE = "data/esf_urls.db"
 
 
 CATEGORIES = {"经纪人": {
-                        "https://sh.5i5j.com/jingjiren/n0/": {"city_name": "上海", "station_name": "我爱我家", "category": "经纪人"},
-                        'https://sh.lianjia.com/jingjiren/': {"city_name": "上海", "station_name": "链家", "category": "经纪人"},
-                        'https://shanghai.anjuke.com/tycoon/': {"city_name": "上海", "station_name": "安居客", "category": "经纪人"},
-                        'http://shanghai.qfang.com/tycoon/o0': {"city_name": "上海", "station_name": "Q房网", "category": "经纪人"},
-                        'http://sh.ganji.com/fang/agent/': {"city_name": "上海","station_name": "赶集网", "category": "经纪人"},
-                        'http://esf.sh.fang.com/agenthome/': {"city_name": "上海","station_name": "房天下", "category": "经纪人"},
-                        'http://sh.centanet.com/jingjiren/': {"city_name": "上海","station_name": "中原地产", "category": "经纪人"}
+                        "https://sh.5i5j.com/jingjiren/n0/": {"city_name": "上海", "station_name": "我爱我家", "category_name": "经纪人"},
+                        'https://sh.lianjia.com/jingjiren/': {"city_name": "上海", "station_name": "链家", "category_name": "经纪人"},
+                        'https://shanghai.anjuke.com/tycoon/': {"city_name": "上海", "station_name": "安居客", "category_name": "经纪人"},
+                        'http://shanghai.qfang.com/tycoon/o0': {"city_name": "上海", "station_name": "Q房网", "category_name": "经纪人"},
+                        'http://sh.ganji.com/fang/agent/': {"city_name": "上海","station_name": "赶集网", "category_name": "经纪人"},
+                        'http://esf.sh.fang.com/agenthome/': {"city_name": "上海","station_name": "房天下", "category_name": "经纪人"},
+                        'http://sh.centanet.com/jingjiren/': {"city_name": "上海","station_name": "中原地产", "category_name": "经纪人"}
                         },
              "新房": {
-                        'http://sh.centanet.com/xinfang/': {"city_name": "上海", "station_name": "中原地产", "category": "新房"},
-                        'http://newhouse.sh.fang.com/house/s/': {"city_name": "上海", "station_name": "房天下", "category": "新房"},
-                        'http://sh.ganji.com/fang12/': {"city_name": "上海", "station_name": "赶集网", "category": "新房"},
-                        'http://shanghai.fangdd.com/loupan/': {"city_name": "上海", "station_name": "房多多", "category": "新房"},
-                        'http://shanghai.qfang.com/newhouse/list': {"city_name": "上海", "station_name": "Q房网", "category": "新房"},
-                        #'http://xf.house.163.com/sh/search/0-0-0-0-0-0-0-0-0-1-0-0-0-0-0-1-1-0-0-0-1.html': {"city_name": "上海", "station_name": "网易房产", "category": "新房"}  # JavaScript event code,
+                        'http://sh.centanet.com/xinfang/': {"city_name": "上海", "station_name": "中原地产", "category_name": "新房"},
+                        'http://newhouse.sh.fang.com/house/s/': {"city_name": "上海", "station_name": "房天下", "category_name": "新房"},
+                        'http://sh.ganji.com/fang12/': {"city_name": "上海", "station_name": "赶集网", "category_name": "新房"},
+                        'http://shanghai.fangdd.com/loupan/': {"city_name": "上海", "station_name": "房多多", "category_name": "新房"},
+                        'http://shanghai.qfang.com/newhouse/list': {"city_name": "上海", "station_name": "Q房网", "category_name": "新房"},
+                        #'http://xf.house.163.com/sh/search/0-0-0-0-0-0-0-0-0-1-0-0-0-0-0-1-1-0-0-0-1.html': {"city_name": "上海", "station_name": "网易房产", "category_name": "新房"}  # JavaScript event code,
                         },
-             "二手房": {'http://sh.centanet.com/ershoufang/':{"city_name":"上海","station_name": "中原地产", "category": "二手房"},
-                        'http://esf.sh.fang.com/':{"city_name":"上海", "station_name": "房天下", "category": "二手房"},
-                        'http://sh.ganji.com/fang5/':{"city_name":"上海", "station_name": "赶集网", "category": "二手房"},
-                        'http://sh.58.com/ershoufang/pn1/':{"city_name":"上海", "station_name": "58同城", "category": "二手房"},
+             "二手房": {'http://sh.centanet.com/ershoufang/':{"city_name":"上海","station_name": "中原地产", "category_name": "二手房"},
+                        'http://esf.sh.fang.com/':{"city_name":"上海", "station_name": "房天下", "category_name": "二手房"},
+                        'http://sh.ganji.com/fang5/':{"city_name":"上海", "station_name": "赶集网", "category_name": "二手房"},
+                        'http://sh.58.com/ershoufang/pn1/':{"city_name":"上海", "station_name": "58同城", "category_name": "二手房"},
                         # 'http://house.ks.js.cn/secondhand.asp', #昆山视窗的单独爬取
-                        'http://shanghai.fangdd.com/esf/':{"city_name":"上海", "station_name": "房多多", "category": "二手房"},
-                        'http://shanghai.qfang.com/sale':{"city_name":"上海", "station_name": "Q房网", "category": "二手房"}
+                        'http://shanghai.fangdd.com/esf/':{"city_name":"上海", "station_name": "房多多", "category_name": "二手房"},
+                        'http://shanghai.qfang.com/sale':{"city_name":"上海", "station_name": "Q房网", "category_name": "二手房"}
                          },
              "商铺": {
-                        "http://shop.sh.fang.com/":{"city_name":"上海","station_name": "房天下", "category": "商铺"},
-                        'http://sh.ganji.com/fang7/': {"city_name":"上海","station_name": "赶集网", "category": "商铺"},
-                        'http://sh.58.com/shangpucs/pn1/': {"city_name":"上海","station_name": "58同城", "category": "商铺"},
-                        # 'https://sh.xzl.anjuke.com/zu/?from=navigation': {"city_name":"上海","station_name": "安居客", "category": "商铺"},
+                        # "http://shop.sh.fang.com/":{"city_name":"上海","station_name": "房天下", "category_name": "商铺"},
+                        # 'http://sh.ganji.com/fang7/': {"city_name":"上海","station_name": "赶集网", "category_name": "商铺"},
+                        # 'http://sh.58.com/shangpucs/pn1/': {"city_name":"上海","station_name": "58同城", "category_name": "商铺"},
+                        'https://sh.xzl.anjuke.com/zu/?from=navigation': {"city_name":"上海","station_name": "安居客", "category_name": "商铺"},
                     }
                   }
+
 # update partial urls of not equal 0
 REFRESH_URLS = 0
 
 MYSQL_PIPELINE_URL = "mysql://logan:09010163@207.148.102.197/estate"
 
+# information insert into property table, for BasicPropertySpider._load_ids
+# keep table name and field name in general formation
+PROPERTY_IDS = ["station_id", "district_id", "category_id"]
 
 #  global used functions
