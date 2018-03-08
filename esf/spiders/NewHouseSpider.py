@@ -138,7 +138,7 @@ class NewHouseDistrictSpider(BasicDistrictSpider):
 
 class NewHousePropertySpider(BasicPropertySpider):
     name = "NewHousePropertySpider"
-    domains = "房天下"
+    # domains = "房天下"
     category_name = "新房"
     nextpage_xpaths = {
         ".ganji.com": '//ul[@class="pageLink clearfix"]//a/@href',
