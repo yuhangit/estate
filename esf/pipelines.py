@@ -15,6 +15,7 @@ import pymysql
 import dj_database_url
 import traceback
 from scrapy import signals
+from copy import deepcopy
 
 
 class SqlitePipeline(object):
@@ -150,7 +151,8 @@ class MysqlWriter(object):
         try:
             # used for update dedicated field in district_rel
             ids = {}
-            all_ids = self.settings.get("PROPERTY_IDS")
+            # !!! make a copy otherwise source list will be empty
+            all_ids = deepcopy(self.settings.get("PROPERTY_IDS"))
             for _id in all_ids:
                 if item.get(_id):
                     ids.update(((_id, item.get(_id)), ))
