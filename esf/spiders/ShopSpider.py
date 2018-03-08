@@ -18,7 +18,6 @@ import re
 # cannot use CrawlSpider for lack pass meta between rules
 class ShopDistrictSpider(BasicDistrictSpider):
     name = "ShopDistrictSpider"
-
     category = "商铺"
     dist_xpaths = {
         # ".fang.com": '//div[@id="list_38"]//a[not(text()="不限")]',

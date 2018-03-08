@@ -75,13 +75,13 @@ class DistrictSpider(scrapy.Spider):
             self.logger.info("5a5j dist_name ...")
             district_urls = response.xpath('(//*[text()="全部"])[1]//ancestor::ul[1]//a[not(.//text()="全部")]')
 
-        category = self.get_category(response.url)
+        category_name = self.get_category(response.url)
         for url in district_urls:
             district_url = response.urljoin(urlparse(url.xpath('./@href').extract_first()).path)
             district_name = "".join(url.xpath('.//text()').extract()).strip()
 
             yield Request(url=district_url, callback=self.parse_subdistrict,
-                          meta={"dist_name": district_name, "category": category})
+                          meta={"dist_name": district_name, "category_name": category_name})
 
     def parse_subdistrict(self, response):
         """
@@ -126,7 +126,7 @@ class DistrictSpider(scrapy.Spider):
             subdistrict_urls = response.xpath('(//*[text()="不限"])[2]//ancestor::div[@class="option-list sub-option-list"]//a[not(text()="不限")]')
 
         district = response.meta.get("dist_name")
-        category = response.meta.get("category")
+        category_name = response.meta.get("category_name")
 
         # ！！ if no subdist_name exists, add nodef into subdist_name
         if not subdistrict_urls:
@@ -137,7 +137,7 @@ class DistrictSpider(scrapy.Spider):
             l.add_value("dist_name", district)
             l.add_value("subdist_name", "nodef")
             l.add_value("url", response.url)
-            l.add_value("category", category)
+            l.add_value("category_name", category_name)
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -156,7 +156,7 @@ class DistrictSpider(scrapy.Spider):
             l.add_value("dist_name", district)
             l.add_value("subdist_name", subdistrict)
             l.add_value("url", subdistrict_url)
-            l.add_value("category", category)
+            l.add_value("category_name", category_name)
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -172,7 +172,7 @@ class DistrictSpider(scrapy.Spider):
         subdistricts = response.xpath('//option[not(text()="选择乡镇")]')
         base_url = 'http://house.ks.js.cn/secondhand.asp?'
 
-        category = self.get_category(response.url)
+        category_name = self.get_category(response.url)
         self.logger.info("process kunshan")
         for subdistrict in subdistricts:
             subdistrict = subdistrict.xpath("./@value").extract_first().strip()
@@ -183,7 +183,7 @@ class DistrictSpider(scrapy.Spider):
             l.add_value("dist_name", district)
             l.add_value("subdist_name", subdistrict)
             l.add_value("url", url)
-            l.add_value("category", category)
+            l.add_value("category_name", category_name)
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -215,9 +215,9 @@ class DistrictSpider(scrapy.Spider):
     #  获取每个主站的类别
     def get_category(self,url):
         categories = get_project_settings().get("CATEGORIES")
-        category = ""
+        category_name = ""
         for k, v in categories.items():
             if url in v:
-                category = k
-                return category
-        return category
+                category_name = k
+                return category_name
+        return category_name

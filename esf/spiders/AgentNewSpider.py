@@ -18,8 +18,8 @@ import pymysql
 
 class AgentDistrictSpider(BasicDistrictSpider):
     name = "AgentDistrictSpider"
-    category = "经纪人"
-    start_urls = get_project_settings().get("CATEGORIES")[category]
+    category_name = "经纪人"
+    start_urls = get_project_settings().get("CATEGORIES")[category_name]
 
     def start_requests(self):
         for url,meta in self.start_urls.items():
@@ -75,7 +75,7 @@ class AgentDistrictSpider(BasicDistrictSpider):
             l.add_value("dist_name", None)
             l.add_value("subdist_name", None)
             l.add_value("city_name", city_name)
-            l.add_value("category", self.category)
+            l.add_value("category_name", self.category_name)
             l.add_value("station_name", station_name)
 
             l.add_value("source", response.request.url)
@@ -138,7 +138,7 @@ class AgentDistrictSpider(BasicDistrictSpider):
         ###
         ##
         city_name = response.meta.get("city_name")
-        category = response.meta.get("category")
+        category_name = response.meta.get("category_name")
         dist_name = response.meta.get("dist_name")
         subdist_name = response.meta.get("subdist_name")
         station_name = response.meta.get("station_name")
@@ -154,7 +154,7 @@ class AgentDistrictSpider(BasicDistrictSpider):
 
             l.add_value("dist_name", dist_name)
             l.add_value("subdist_name", None)
-            l.add_value("category", category)
+            l.add_value("category_name", category_name)
             l.add_value("city_name", city_name)
             l.add_value("station_name", station_name)
 
@@ -184,7 +184,7 @@ class AgentDistrictSpider(BasicDistrictSpider):
             l.add_value("station_name", station_name)
             l.add_value("subdist_name", subdist_name)
             l.add_value("url", subdistrict_url)
-            l.add_value("category", category)
+            l.add_value("category_name", category_name)
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -198,7 +198,7 @@ class AgentDistrictSpider(BasicDistrictSpider):
 
 class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
     name = "AgencyIndexPageSpider"
-    category = "agency"
+    category_name = "agency"
     xpaths = ['//span[text()="下一页 >"]//ancestor::a[1]', # ganji
               '//a[text()=">"]',                              # centanet
               '//a[text()="下一页"]',                        # 5i5j, fang
@@ -217,7 +217,7 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
         with sqlite3.connect(get_project_settings().get("STORE_DATABASE")) as cnx:
             cursor = cnx.cursor()
             cursor.execute("select dist_name,subdist_name,url from main.dist_name "
-                           "where instr(source, '.fang.com') > 0 and category = ?", [self.category])
+                           "where instr(source, '.fang.com') > 0 and category_name = ?", [self.category_name])
             url_infos = cursor.fetchall()
 
         for url_info in url_infos:

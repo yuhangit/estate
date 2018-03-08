@@ -17,7 +17,7 @@ class HouseKeepingItem(scrapy.Item):
     project = Field()
     server = Field()
 
-    category = Field()
+    category_name = Field()
     city_name = Field()
     dist_name = Field()
     subdist_name = Field()

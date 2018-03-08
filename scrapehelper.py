@@ -43,21 +43,21 @@ class DBConnect:
 
 def get_meta_info(meta):
     info_field = ["city_name", "dist_name", "subdist_name",
-                  "category", "station_name", "district_id",
+                  "category_name", "station_name", "district_id",
                   "category_id", "station_id"]
     return { k: v for k, v in meta.items() if k in info_field}
 
 
 class BasicDistrictSpider(scrapy.Spider):
 
-    category = None
+    category_name = None
     dist_xpaths = {}
     subdist_xpaths = {}
     name = None
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
-        attrs = (cls.category, cls.name, cls.dist_xpaths, cls.subdist_xpaths)
+        attrs = (cls.category_name, cls.name, cls.dist_xpaths, cls.subdist_xpaths)
         for attr in attrs:
             if not attr:
                 raise NotConfigured("attribute not configure")
@@ -69,7 +69,7 @@ class BasicDistrictSpider(scrapy.Spider):
 
 
     def start_requests(self):
-        start_urls = get_project_settings().get("CATEGORIES").get(self.category)
+        start_urls = get_project_settings().get("CATEGORIES").get(self.category_name)
         for url,meta in start_urls.items():
             yield Request(url=url, meta=meta, callback=self.parse_dist)
 
@@ -83,7 +83,7 @@ class BasicDistrictSpider(scrapy.Spider):
 
         city_name = response.meta.get("city_name")
         station_name = response.meta.get("station_name")
-        category = response.meta.get("category")
+        category_name = response.meta.get("category_name")
 
         if not district:
             self.logger.error("!!!! url: %s not found any districts, checkout again this  !!!!", response.url)
@@ -93,7 +93,7 @@ class BasicDistrictSpider(scrapy.Spider):
 
             l.add_value("dist_name", None)
             l.add_value("subdist_name", None)
-            l.add_value("category", category)
+            l.add_value("category_name", category_name)
             l.add_value("city_name", city_name)
             l.add_value("station_name", station_name)
 
@@ -133,7 +133,7 @@ class BasicDistrictSpider(scrapy.Spider):
                 subdistrict_urls = response.xpath(xpath)
 
         city_name = response.meta.get("city_name")
-        category = response.meta.get("category")
+        category_name = response.meta.get("category_name")
         dist_name = response.meta.get("dist_name")
         subdist_name = response.meta.get("subdist_name")
         station_name = response.meta.get("station_name")
@@ -148,7 +148,7 @@ class BasicDistrictSpider(scrapy.Spider):
 
             l.add_value("dist_name", dist_name)
             l.add_value("subdist_name", None)
-            l.add_value("category", category)
+            l.add_value("category_name", category_name)
             l.add_value("city_name", city_name)
             l.add_value("station_name", station_name)
 
@@ -177,7 +177,7 @@ class BasicDistrictSpider(scrapy.Spider):
             l.add_value("station_name", station_name)
             l.add_value("subdist_name", subdist_name)
             l.add_value("url", subdistrict_url)
-            l.add_value("category", category)
+            l.add_value("category_name", category_name)
 
             l.add_value("source", response.request.url)
             l.add_value("project", self.settings.get("BOT_NAME"))
@@ -191,7 +191,7 @@ class BasicDistrictSpider(scrapy.Spider):
 class BasicPropertySpider(scrapy.Spider):
     __metaclass__ = abc.ABCMeta # abstract class method
 
-    category = None
+    category_name = None
     domains = None
     nextpage_xpaths = {}  # {".domain.com":"/path/to/a/@href",} 可以有多个,
     items_xpaths = {}  # {".domain.com":"/path/to/a/@href",} 可以有多个
@@ -221,7 +221,7 @@ class BasicPropertySpider(scrapy.Spider):
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
-        attrs = ( cls.category , cls.nextpage_xpaths , cls.items_xpaths , cls.domains_and_parsers)
+        attrs = ( cls.category_name , cls.nextpage_xpaths , cls.items_xpaths)
         for attr in attrs:
             if not attr:
                 raise NotConfigured("attribute not configure")
@@ -258,7 +258,7 @@ class BasicPropertySpider(scrapy.Spider):
                       ) and district_id is not NULL """.format(domain)
 
         with cnx.cursor(pymysql.cursors.DictCursor) as cursor:
-            cursor.execute(stmt, (self.category,))
+            cursor.execute(stmt, (self.category_name,))
             items = cursor.fetchall()
         cnx.close()
         for item in items:
@@ -295,8 +295,8 @@ class BasicPropertySpider(scrapy.Spider):
                 attr = getattr(self, parser_method, default_parser)
                 try:
                     items = attr(response)
-                except AttributeError:
-                    self.logger.error(traceback.format_exc())
+                except TypeError as e:
+                    self.logger.error(traceback.format_exc("method %s and default %s not found" % (parser_method, default_parser)))
                 break
         else:
             url_doamin = urlparse(response.url).hostname.split(".")[-1]
@@ -307,7 +307,7 @@ class BasicPropertySpider(scrapy.Spider):
             try:
                 items = attr(response)
             except Exception:
-                self.logger.error(traceback.format_exc())
+                self.logger.error(traceback.format_exc("method <%s> not find" % default_parser))
 
         if not items:
             self.logger.error("!!!! url: %s not found any items, checkout again this  !!!!", response.url)
@@ -320,15 +320,23 @@ class BasicPropertySpider(scrapy.Spider):
         for item in items:
             yield item
 
-    def _load_ids(self, itemloader, response):
+    def _load_ids(self, itemloader, response, skipped_ids = None):
         "将response带来的id加载到itemloader中"
-        station_id = response.meta.get("station_id")
-        district_id = response.meta.get("district_id")
-        category_id = response.meta.get("category_id")
+        ids = self.settings.get("PROPERTY_IDS")
 
-        itemloader.add_value("district_id", district_id)
-        itemloader.add_value("station_id", station_id)
-        itemloader.add_value("category_id", category_id)
+        if not skipped_ids:
+            skipped_ids = []
+        if isinstance(skipped_ids, str):
+            skipped_ids = (skipped_ids,)
+
+        for skipped_id in skipped_ids:
+            if skipped_id not in ids:
+                raise AttributeError("%s not in ids" % skipped_id)
+
+        for _id in ids:
+            if _id not in skipped_ids:
+                itemloader.add_value(_id, response.meta.get(_id))
+
 
     def _load_keephouse(self, itemloader, response):
         "将辅助信息加载进itemloader中"

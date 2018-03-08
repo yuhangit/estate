@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 
 class SecondHouseDistrictSpider(BasicDistrictSpider):
     name = "SecondHouseDistrictSpider"
-    category = "二手房"
+    category_name = "二手房"
     dist_xpaths = {
         ".centanet.com": '(//span[text()="不限"])[1]/ancestor::p//a[not(text()="不限")]',
         ".fang.com": '(//a[text()="不限"])[1]/ancestor::div[@id="list_D02_10"]//a[not(text()="不限")]',
@@ -36,7 +36,7 @@ class SecondHouseDistrictSpider(BasicDistrictSpider):
     }
 
     # def start_requests(self):
-    #     start_urls = get_project_settings().get("CATEGORIES")[self.category]
+    #     start_urls = get_project_settings().get("CATEGORIES")[self.category_name]
     #     for url, meta in start_urls.items():
     #         yield Request(url=url, meta=meta)
     #
@@ -73,7 +73,7 @@ class SecondHouseDistrictSpider(BasicDistrictSpider):
     #
     #         l.add_value("dist_name", None)
     #         l.add_value("subdist_name", None)
-    #         l.add_value("category", self.category)
+    #         l.add_value("category_name", self.category_name)
     #         l.add_value("city_name", city_name)
     #         l.add_value("station_name", station_name)
     #
@@ -132,7 +132,7 @@ class SecondHouseDistrictSpider(BasicDistrictSpider):
     #                                      '[@class="search-area-second clearfix"]//a[not(text()="不限")]')
     #
     #     dist_name = response.meta.get("dist_name")
-    #     category = response.meta.get("category")
+    #     category_name = response.meta.get("category_name")
     #     station_name = response.meta.get("station_name")
     #     city_name = response.meta.get("city_name")
     #     subdist_name = response.meta.get("subdist_name")
@@ -147,7 +147,7 @@ class SecondHouseDistrictSpider(BasicDistrictSpider):
     #
     #         l.add_value("dist_name", dist_name)
     #         l.add_value("subdist_name", None)
-    #         l.add_value("category", category)
+    #         l.add_value("category_name", category_name)
     #         l.add_value("city_name", city_name)
     #         l.add_value("station_name", station_name)
     #
@@ -175,7 +175,7 @@ class SecondHouseDistrictSpider(BasicDistrictSpider):
     #
     #         l.add_value("dist_name", dist_name)
     #         l.add_value("subdist_name", subdist_name)
-    #         l.add_value("category", category)
+    #         l.add_value("category_name", category_name)
     #         l.add_value("station_name", station_name)
     #         l.add_value("city_name", city_name)
     #
@@ -190,7 +190,7 @@ class SecondHouseDistrictSpider(BasicDistrictSpider):
 
 # class SecondHouseIndexPageSpider(scrapy.spiders.CrawlSpider):
 #     name = "SecondHouseIndexPageSpider"
-#     category = "二手房"
+#     category_name = "二手房"
 #
 #     nextpage_xpaths = ['//div[@class="pagerbox"]' # centanet
 #                        ]
@@ -205,7 +205,7 @@ class SecondHouseDistrictSpider(BasicDistrictSpider):
 #     def start_requests(self):
 #         with sqlite3.connect(get_project_settings().get("STORE_DATABASE")) as cnx:
 #             cursor = cnx.cursor()
-#             cursor.execute("", [self.category])
+#             cursor.execute("", [self.category_name])
 #             url_infos = cursor.fetchall()
 #
 #         for url_info in url_infos:
@@ -237,7 +237,7 @@ class SecondHouseDistrictSpider(BasicDistrictSpider):
 #             l.add_xpath("agent_name", '//a[@class="f000 f18"]/b/text()')
 #             l.add_xpath("recent_activation", '//p[@class="f333"]/span[@class="f666"][1]/text()',
 #                         MapCompose(lambda x: int(x)), re=r"\d+")
-#             l.add_value("category", self.category)
+#             l.add_value("category_name", self.category_name)
 #
 #             # housekeeping
 #             l.add_value("source", response.url)
@@ -248,9 +248,10 @@ class SecondHouseDistrictSpider(BasicDistrictSpider):
 #
 #             yield l.load_item()
 
+
 class SecondHousePropertySpider(BasicPropertySpider):
     name = "SecondHousePropertySpider"
-    category = "二手房"
+    category_name = "二手房"
     # domains = "房天下"
     nextpage_xpaths = {
         ".ganji.com": '//ul[@class="pageLink clearfix"]//a/@href',

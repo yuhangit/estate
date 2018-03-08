@@ -22,12 +22,12 @@ class SqlitePipeline(object):
 
     def retrieve_id(self, item):
         category_id, station_id, district_id = None, None, None
-        self.logger.info("item contain: %s,%s,%s,%s,%s", item.get("category"), item.get("station_name"),
+        self.logger.info("item contain: %s,%s,%s,%s,%s", item.get("category_name"), item.get("station_name"),
                     item.get("city_name"), item.get("dist_name"), item.get("subdist_name"))
         try:
             with self.cnx.cursor() as cursor:
                 category_sql = "select category_id from category_rel where category_name = %s"
-                cursor.execute(category_sql, (item.get("category"),))
+                cursor.execute(category_sql, (item.get("category_name"),))
                 if cursor.rowcount > 0:
                     category_id = cursor.fetchone()[0]
 
@@ -62,14 +62,14 @@ class SqlitePipeline(object):
 
         elif isinstance(item, DistrictItem):
             url_field = None
-            category = item.get("category")
-            if category == "新房":
+            category_name = item.get("category_name")
+            if category_name == "新房":
                 url_field = "newhouse_url"
-            elif category == "二手房":
+            elif category_name == "二手房":
                 url_field = "secondhouse_url"
-            elif category == "商铺":
+            elif category_name == "商铺":
                 url_field = "shop_url"
-            elif category == "经纪人":
+            elif category_name == "经纪人":
                 url_field = "agency_url"
 
             if url_field:
@@ -138,6 +138,7 @@ class MysqlWriter(object):
 
     def open_spider(self, spider):
         self.logger = spider.logger
+        self.settings= spider.settings
 
     def close_spider(self, spider):
         self.dbpool.close()
@@ -148,15 +149,21 @@ class MysqlWriter(object):
 
         try:
             # used for update dedicated field in district_rel
-            if item.get("station_id") and item.get("category_id") and item.get("district_id"):
-                ids = {
-                    "category_id": item.get("category_id"),
-                    "district_id": item.get("district_id"),
-                    "station_id": item.get("station_id"),
-                }
-                self.logger.info("get ids from items %s" % ids)
-            else:
-                ids = self.retrieve_id(item)
+            ids = {}
+            all_ids = self.settings.get("PROPERTY_IDS")
+            for _id in all_ids:
+                if item.get(_id):
+                    ids.update(((_id, item.get(_id)), ))
+                    all_ids.remove(_id)
+                    self.logger.info("get %s from item <%s>" % (_id, item))
+
+            self.logger.info("="*32 +"ids are %s" + "="*32, ids)
+            if all_ids:
+                ids.update(self.retrieve_id(item, all_ids))
+
+            self.logger.info("="*32+ "ids are %s" + "="*32, ids)
+            raise NotConfigured
+
             yield self.dbpool.runInteraction(self.do_insert, item, ids)
         except pymysql.OperationalError:
             if self.report_connection_error:
@@ -165,35 +172,33 @@ class MysqlWriter(object):
                 self.__init__(self.mysql_url)
         except:
             self.logger.exception(traceback.format_exc()+ "\n%s", item.get("url") or item.get("source") or "no url")
-
+            raise
         defer.returnValue(item)
 
-    def retrieve_id(self, item):
-        category_id, station_id, district_id = None, None, None
-        self.logger.info("item contain: %s,%s,%s,%s,%s", item.get("category"), item.get("station_name"),
-                    item.get("city_name"), item.get("dist_name"), item.get("subdist_name"))
+    def retrieve_id(self, item, retrieved_ids):
+        self.logger.info(retrieved_ids)
+        retrieved_items = {}
         try:
             with self.cnx.cursor() as cursor:
-                category_sql = "select category_id from estate.category_rel where category_name = %s"
-                cursor.execute(category_sql, (item.get("category"),))
-                if cursor.rowcount > 0:
-                    category_id = cursor.fetchone()[0]
+                for retrieved_id in retrieved_ids:
+                    if retrieved_id == "district_id":
+                        retrieved_name = "dist_name"
+                        stmt = "select district_id from estate.district_rel where city_name='{}' and" \
+                               "  dist_name = %s and subdist_name = '{}'".format(item.get("city_name"),
+                                                                               item.get("subdist_name"))
+                    else:
+                        table_name = retrieved_id.split("_")[0] + "_rel"
+                        retrieved_name = retrieved_id.split("_")[0]+"_name"
+                        stmt = "select {0} from {1} where {2} = %s".format(retrieved_id, table_name, retrieved_name)
+                    self.logger.info("stmt: %s", stmt)
+                    cursor.execute(stmt, (item.get(retrieved_name),))
+                    retrieved_items[retrieved_id] = cursor.fetchone()[0] if cursor.rowcount > 0 else None
 
-                station_sql = "select station_id from estate.station_rel where station_name = %s"
-                cursor.execute(station_sql, (item.get("station_name"),))
-                if cursor.rowcount > 0:
-                    station_id = cursor.fetchone()[0]
-
-                district_sql = "select district_id from estate.district_rel where city_name = %s and " \
-                               "dist_name = %s and subdist_name = %s"
-
-                cursor.execute(district_sql, (item.get("city_name"), item.get("dist_name"), item.get("subdist_name")))
-                if cursor.rowcount > 0:
-                    district_id = cursor.fetchone()[0]
         except Exception as e:
             self.logger.exception("error when retrieve id")
 
-        return {"category_id": category_id, "district_id": district_id, "station_id": station_id}
+        return retrieved_items
+
 
     @staticmethod
     def do_insert(tx, item, ids):
@@ -213,18 +218,18 @@ class MysqlWriter(object):
         elif isinstance(item, DistrictItem):
             url_field = None
             category_field = None
-            category = item.get("category")
+            category_name = item.get("category_name")
 
-            if category == "新房":
+            if category_name == "新房":
                 url_field = "newhouse_url"
                 category_field = "category_id_newhouse"
-            elif category == "二手房":
+            elif category_name == "二手房":
                 url_field = "secondhouse_url"
                 category_field = "category_id_secondhouse"
-            elif category == "商铺":
+            elif category_name == "商铺":
                 url_field = "shop_url"
                 category_field = "category_id_shop"
-            elif category == "经纪人":
+            elif category_name == "经纪人":
                 url_field = "agency_url"
                 category_field = "category_id_agency"
 

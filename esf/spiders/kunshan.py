@@ -24,7 +24,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
 
     city_name = "上海周边"
     dist_name = "昆山"
-    category = "二手房"
+    category_name = "二手房"
     station_name = "昆山视窗"
 
     rules = (
@@ -53,7 +53,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
 
         l.add_value("city_name", self.city_name)
         l.add_value("dist_name", self.dist_name)
-        l.add_value("category", self.category)
+        l.add_value("category_name", self.category_name)
         l.add_value("station_name", self.station_name)
         l.add_xpath("subdist_name", '(//div[@class="xx_xq_l200"])[2]/text()', re='区域：(?:昆山)?(\\w+)')
 
@@ -93,7 +93,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         l.add_value("city_name", self.city_name)
         l.add_value("dist_name", self.dist_name)
         l.add_value('station_name', self.station_name)
-        l.add_value("category", self.category)
+        l.add_value("category_name", self.category_name)
         l.add_xpath("subdist_name", '(//div[@class="xx_xq_l200"])[2]/text()', re='区域：(?:昆山)?(\\w+)')
 
         # housekeeping
