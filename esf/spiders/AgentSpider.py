@@ -19,7 +19,7 @@ import re
 class AgentDistrictSpider(BasicDistrictSpider):
     name = "AgentDistrictSpider"
 
-    category = "经纪人"
+    category_name = "经纪人"
     dist_xpaths = {
         ".centanet.com": '(//*[text()="不限"])[1]//ancestor::p[@class="termcon fl"]//a[not(text()="不限")]',
         ".fang.com": '(//*[text()="不限"])[1]//ancestor::div[@class="qxName"]//a[not(text()="不限")]',
