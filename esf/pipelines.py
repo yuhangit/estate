@@ -152,10 +152,12 @@ class MysqlWriter(object):
             # used for update dedicated field in district_rel
             ids = {}
             # !!! make a copy otherwise source list will be empty
-            all_ids = deepcopy(self.settings.get("PROPERTY_IDS"))
+            PROPERTY_IDS = self.settings.get("PROPERTY_IDS")
+            all_ids = deepcopy(PROPERTY_IDS)
             self.logger.info("all ids : %s", all_ids)
             self.logger.info("district_id: %s", item.get("district_id"))
-            for _id in all_ids:
+            # cant use all_ids in for loop depending it's mutable nature
+            for _id in PROPERTY_IDS:
                 if item.get(_id):
                     ids.update(((_id, item.get(_id)), ))
                     all_ids.remove(_id)
