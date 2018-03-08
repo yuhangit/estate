@@ -36,7 +36,7 @@ class ShopDistrictSpider(BasicDistrictSpider):
 class ShopPropertySpider(BasicPropertySpider):
     name = "ShopPropertySpider"
     category_name = "商铺"
-    domains = "安居客"
+    # domains = "安居客"
     nextpage_xpaths = {
         ".fang.com": '//div[@class="fanye gray6"]/a/@href',
         ".ganji.com": '//ul[@class="pageLink clearfix"]//a/@href',

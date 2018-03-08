@@ -61,8 +61,8 @@ DOWNLOADER_MIDDLEWARES = {
    # 'esf.middlewares.CustomRetry.CustomRetryMiddleware': 500,
     'scrapy.downloadermiddlewares.redirect.RedirectMiddleware':None,
     'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware':None,
-    "scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware":None
-    #'esf.middlewares.user_agent.RandomUserAgentMiddleware': 300
+    "scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware":None,
+    'esf.middlewares.user_agent.RandomUserAgentMiddleware': 300
 }
 
 # Enable or disable extensions
@@ -75,7 +75,7 @@ DOWNLOADER_MIDDLEWARES = {
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     # 'esf.pipelines.SqlitePipeline': 300,
-    # 'esf.pipelines.MysqlWriter': 400
+    'esf.pipelines.MysqlWriter': 400
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
