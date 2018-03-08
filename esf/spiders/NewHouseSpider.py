@@ -190,6 +190,7 @@ class NewHousePropertySpider(BasicPropertySpider):
         # category_name
         # station_name
         # ids
+        self._load_ids(l, response)
         # housekeeping
         self._load_keephouse(l, response)
 
