@@ -69,7 +69,7 @@ class ShopPropertySpider(BasicPropertySpider):
         l.add_xpath("address", '(//div[@class="wrap"]//dl/dt)[3]/text()', Join(), MapCompose(lambda x: "".join(x.split())))
         l.add_xpath("agent_name", '//span[@id="agentname"]/text()')
         l.add_xpath("agent_company", '//dd[@class="black"]/a/text()', Join(), MapCompose(lambda x: "".join(x.split())))
-        l.add_xpath("agent_phone", '//div[@class="phone_top"]//label[@id="mobilecode"]/text()')
+        l.add_xpath("agent_phone", '//div[@class="phone_top"]//label[@id="mobilecode"]/text()',MapCompose(lambda x: "".join(x.split())))
         # l.add_value("category_id_shop", self.category_id_shop)
         # l.add_value("station_name", "房天下")
 
@@ -92,7 +92,7 @@ class ShopPropertySpider(BasicPropertySpider):
                     Join(), MapCompose(lambda x: "".join(x.split())))
         l.add_xpath("agent_name", '//p[@class="name"]/text()', MapCompose(lambda x: x.strip()))
         l.add_xpath("agent_company", '//span[@clas="company"]/text()', Join(), MapCompose(lambda x: "".join(x.split())))
-        l.add_xpath("agent_phone", '//div[@class="phone"]/a/text()')
+        l.add_xpath("agent_phone", '//div[@class="phone"]/a/text()', MapCompose(lambda x: "".join(x.split())))
         # l.add_value("category_id_secondhouse", self.category_id_secondhouse)
         # l.add_value("station_name", "赶集网")
 
@@ -116,7 +116,7 @@ class ShopPropertySpider(BasicPropertySpider):
                     Join(), MapCompose(lambda x: "".join(x.split())))
         l.add_xpath("agent_name", '//span[@class="f14 c_333 jjrsay"]/text()', MapCompose(lambda x: x.strip()))
         # l.add_xpath("agent_company", '//span[@class="f14 c_333 jjrsay"]/text()')
-        l.add_xpath("agent_phone", '//p[@class="phone-num"]/text()')
+        l.add_xpath("agent_phone", '//p[@class="phone-num"]/text()', MapCompose(lambda x: "".join(x.split())))
         # l.add_value("category_id_secondhouse", self.category_id_secondhouse)
         # l.add_value("station_name", "58同城")
 

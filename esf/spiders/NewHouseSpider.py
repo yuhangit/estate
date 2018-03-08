@@ -208,7 +208,7 @@ class NewHousePropertySpider(BasicPropertySpider):
                     Join(), MapCompose(lambda x: "".join(x.split())))
         l.add_xpath("agent_name", '//p[@class="name"]/text()', MapCompose(lambda x: x.strip()))
         l.add_xpath("agent_company", '//span[@clas="company"]/text()')
-        l.add_xpath("agent_phone", '//a[@class="phone_num js_person_phone"]/text()')
+        l.add_xpath("agent_phone", '//a[@class="phone_num js_person_phone"]/text()', MapCompose(lambda x: int("".join(x.split()))))
 
 
         # ids
