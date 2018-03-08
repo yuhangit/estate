@@ -194,4 +194,11 @@ class HTTPProxyMiddleware(object):
         self.loger.info("%s request status %s, proxy: %s." %(request.url, response.status, request.meta.get("proxy")))
         req = request.copy()
         req.dont_filter = True
+
+        # url normal redirect , return
+        if response.status == 302:
+            req.meta["redirect_302"] = req.meta.get("redirect_302", 0) +1
+            self.loger.info("url <%s> redirect to <%s> %s times",request.url, response.url, req.meta["redirect_302"])
+            if req.meta.get("redirect_302", 0) > 10:
+                return response
         return req
