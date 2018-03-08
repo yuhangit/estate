@@ -144,7 +144,7 @@ class NewHousePropertySpider(BasicPropertySpider):
         ".ganji.com": '//ul[@class="pageLink clearfix"]//a/@href',
         ".fang.com": '//li[@class="fr"]/a/@href',
         ".fangdd.com": '//div[@class="ZDLI8"]/a/@href',
-        ".qfang.com": '//div[@class="btns_turnpage btns-turnpage-center sale-list-turnpage turnpage-right clearfix "]//a/@href',
+        ".qfang.com": '//p[@class="turnpage_num fr"]/a/@href',
     }
     items_xpaths = {
         ".centanet.com": '//h5[@class="room-name"]/a/@href',
@@ -159,7 +159,8 @@ class NewHousePropertySpider(BasicPropertySpider):
 
         l = ItemLoader(item=PropertyItem(), selector=response)
         l.default_output_processor = TakeFirst()
-        l.add_xpath("title", '//h5[@class="mr25 f16 "]/a/text()')
+        l.add_xpath("title", '//h5[@class="mr25 f16 "]/a/text()',
+                    MapCompose(lambda x: "".join(x.split())))
         l.add_value("url", response.url)
         l.add_xpath("price", '//span[@class="nhpice"]/b/text()')
         l.add_xpath("address", '(//p[@class="txt_r"])[1]/text()')
@@ -208,7 +209,7 @@ class NewHousePropertySpider(BasicPropertySpider):
                     Join(), MapCompose(lambda x: "".join(x.split())))
         l.add_xpath("agent_name", '//p[@class="name"]/text()', MapCompose(lambda x: x.strip()))
         l.add_xpath("agent_company", '//span[@clas="company"]/text()')
-        l.add_xpath("agent_phone", '//a[@class="phone_num js_person_phone"]/text()', MapCompose(lambda x: int("".join(x.split()))))
+        l.add_xpath("agent_phone", '//a[@class="phone_num js_person_phone"]/text()', Join()(), re="(\\d+)")
 
 
         # ids
@@ -223,9 +224,11 @@ class NewHousePropertySpider(BasicPropertySpider):
 
         l = ItemLoader(item=PropertyItem(), selector=response)
         l.default_output_processor = TakeFirst()
-        l.add_xpath("title", '//h1[@class="_3sWIj"]/text()', MapCompose(lambda x: x.strip()))
+        l.add_xpath("title", '//h1[@class="_3sWIj"]/text()',
+                    MapCompose(lambda x: "".join(x.split())))
         l.add_value("url", response.url)
-        l.add_xpath("price", '//div[@class="C1hVk"]/text()')
+        l.add_xpath("price", '//div[@class="C1hVk"]/text()',
+                    MapCompose(lambda x: "".join(x.split())))
         l.add_xpath("address",
                     '//div[@class="_2mmF- _3YJ15 undefined"]/text()',
                     Join(), MapCompose(lambda x: "".join(x.split())))

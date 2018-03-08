@@ -197,8 +197,8 @@ class AgentOldDistrictSpider(BasicDistrictSpider):
 
 
 
-class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
-    name = "AgencyIndexPageSpider"
+class AgencySpider(scrapy.spiders.CrawlSpider):
+    name = "AgencySpider"
     category_name = "agency"
     xpaths = ['//span[text()="下一页 >"]//ancestor::a[1]', # ganji
               '//a[text()=">"]',                              # centanet
@@ -215,15 +215,7 @@ class AgencyIndexPageSpider(scrapy.spiders.CrawlSpider):
     )
 
     def start_requests(self):
-        with sqlite3.connect(get_project_settings().get("STORE_DATABASE")) as cnx:
-            cursor = cnx.cursor()
-            cursor.execute("select dist_name,subdist_name,url from main.dist_name "
-                           "where instr(source, '.fang.com') > 0 and category_name = ?", [self.category_name])
-            url_infos = cursor.fetchall()
-
-        for url_info in url_infos:
-            meta = {"dist_name":url_info[0],"subdist_name":url_info[1]}
-            yield Request(url=url_info[2],meta=meta)
+        pass
 
     def parse_start_url(self, response):
 
