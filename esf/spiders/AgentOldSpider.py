@@ -197,21 +197,19 @@ class AgentOldDistrictSpider(BasicDistrictSpider):
 
 
 
-class AgencyOldSpider(scrapy.spiders.CrawlSpider):
+class AgencyOldSpider(scrapy.spiders.Spider):
     name = "AgencyOldSpider"
     category_name = "经纪人"
-    # domains = "安居客"
-    xpaths = ['//ul[@class="pageLink clearfix"]', # ganji
-              '//div[@class="pager-inner"]',                  # centanet
-              '//div[@id="agentlist_B08_01"]',                # 5i5j, fang
+    domains = None
+    xpaths = {
+        ".ganji.com": '//ul[@class="pageLink clearfix"]//a[not(contains(@href,"javascript"))]/@href', # ganji
+        ".centanet.com": '//div[@class="pagerbox"]//a[not(contains(@href,"javascript"))]/@href',                  # centanet
+        ".fang.com": '//div[@id="agentlist_B08_01"]/a[not(contains(@href,"javascript"))]/@href',                # 5i5j, fang
               # '//div[@class="page-box house-lst-page-box"]//a', # lianjia
-              '//div[@class="multi-page"]',                         # anjuke
-              '//p[@class="turnpage_num"]'      # qfang
-              ]
-    rules = (
-        Rule(LinkExtractor(restrict_xpaths=xpaths),
-             callback='parse_indexpage',follow=True),
-    )
+        ".anjuke.com": '//div[@class="multi-page"]//a[not(contains(@href,"javascript"))]/@href',                         # anjuke
+        ".qfang.com": '//p[@class="turnpage_num"]//a[not(contains(@href,"javascript"))]/@href',      # qfang
+        ".5i5j.com": '//div[@class="pageSty rf"]/a[not(contains(@href,"javascript"))]/@href'
+    }
 
     def start_requests(self):
         cnx = DBConnect.get_connect()
@@ -247,7 +245,7 @@ class AgencyOldSpider(scrapy.spiders.CrawlSpider):
             meta = item
             yield Request(url=url, meta=meta)
 
-    def parse_start_url(self, response):
+    def parse(self, response):
         meta = get_meta_info(response.meta)
         self.logger.info("*"*32+"meta: %s", meta)
         # 链家页面页码由 js生成
@@ -266,22 +264,29 @@ class AgencyOldSpider(scrapy.spiders.CrawlSpider):
                 for item in self.parse_indexpage(response):
                     yield item
         # 利用Rules 爬取5i5j后续页面缓慢
-        elif '.5i5j.com' in response.url:
-            r = re.compile('\\d+$')
-            page_num = response.xpath('//div[@class="pageSty rf"]//a//text()').re(r'(\d+)')
-            base_path = response.xpath('//div[@class="pageSty rf"]//a[not(@class="cur")]//@href').extract_first()
-            if page_num:
-                for i in range(1,max(map(int,page_num))+1):
-                    url_path = response.urljoin(r.sub("%i/" %i,base_path))
-                    self.logger.critical("url: %s",url_path)
-                    yield Request(url=url_path, callback=self.parse_indexpage, meta=meta)
-
-            else:
-                for item in self.parse_indexpage(response):
-                    yield item
+        # elif '.5i5j.com' in response.url:
+        #     r = re.compile('\\d+$')
+        #     page_num = response.xpath('//div[@class="pageSty rf"]//a//text()').re(r'(\d+)')
+        #     base_path = response.xpath('//div[@class="pageSty rf"]//a[not(@class="cur")]//@href').extract_first()
+        #     if page_num:
+        #         for i in range(1,max(map(int,page_num))+1):
+        #             url_path = response.urljoin(r.sub("%i/" %i,base_path))
+        #             self.logger.critical("url: %s",url_path)
+        #             yield Request(url=url_path, callback=self.parse_indexpage, meta=meta)
+        #
+        #     else:
+        #         for item in self.parse_indexpage(response):
+        #             yield item
         else:
             for item in self.parse_indexpage(response):
                 yield item
+
+            for domain, xpath in self.xpaths:
+                if domain in response.url:
+                    nextpage_urls = response.xpath(xpath).extract()
+                    for url in nextpage_urls:
+                        url = response.urljoin(url)
+                        yield Request(url, meta=meta)
 
     def parse_indexpage(self,response):
         self.logger.info("process url: <%s>", response.url)
@@ -526,7 +531,9 @@ class TestCrawlSpider(scrapy.spiders.CrawlSpider):
     def parse_indexpage(self, response):
         yield {"url":response.url}
 
+
 from scrapy.http import FormRequest
+
 
 class TestFormSpider(scrapy.spiders.Spider):
     start_urls = ["http://sh.centanet.com/ershoufang/shcns000009401.html"]
