@@ -197,8 +197,8 @@ class AgentOldDistrictSpider(BasicDistrictSpider):
 
 
 
-class AgencySpider(scrapy.spiders.CrawlSpider):
-    name = "AgencySpider"
+class AgencyOldSpider(scrapy.spiders.CrawlSpider):
+    name = "AgencyOldSpider"
     category_name = "agency"
     domains = "安居客"
     xpaths = ['//ul[@class="pageLink clearfix"]', # ganji
