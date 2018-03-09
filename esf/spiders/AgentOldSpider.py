@@ -200,7 +200,7 @@ class AgentOldDistrictSpider(BasicDistrictSpider):
 class AgencyOldSpider(scrapy.spiders.CrawlSpider):
     name = "AgencyOldSpider"
     category_name = "经纪人"
-    domains = "安居客"
+    # domains = "安居客"
     xpaths = ['//ul[@class="pageLink clearfix"]', # ganji
               '//div[@class="pager-inner"]',                  # centanet
               '//div[@id="agentlist_B08_01"]',                # 5i5j, fang
@@ -249,7 +249,7 @@ class AgencyOldSpider(scrapy.spiders.CrawlSpider):
 
     def parse_start_url(self, response):
         meta = get_meta_info(response.meta)
-        self.logger.inf0("*"*32+"meta: %s", meta)
+        self.logger.info("*"*32+"meta: %s", meta)
         # 链家页面页码由 js生成
         if '.lianjia.com' in response.url:
             r = re.compile('{page}')
