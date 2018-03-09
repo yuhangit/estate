@@ -200,25 +200,55 @@ class AgentOldDistrictSpider(BasicDistrictSpider):
 class AgencySpider(scrapy.spiders.CrawlSpider):
     name = "AgencySpider"
     category_name = "agency"
-    xpaths = ['//span[text()="下一页 >"]//ancestor::a[1]', # ganji
-              '//a[text()=">"]',                              # centanet
-              '//a[text()="下一页"]',                        # 5i5j, fang
+    domains = "安居客"
+    xpaths = ['//ul[@class="pageLink clearfix"]', # ganji
+              '//div[@class="pager-inner"]',                  # centanet
+              '//div[@id="agentlist_B08_01"]',                # 5i5j, fang
               # '//div[@class="page-box house-lst-page-box"]//a', # lianjia
-              '//a[text()="下一页 >"]',                         # anjuke
-              '//span[text()="下一页"]//ancestor::a[1]'      # qfang
+              '//div[@class="multi-page"]',                         # anjuke
+              '//p[@class="turnpage_num"]'      # qfang
               ]
     rules = (
-        # ganji
         Rule(LinkExtractor(restrict_xpaths=xpaths),
              callback='parse_indexpage',follow=True),
-
     )
 
     def start_requests(self):
-        pass
+        cnx = DBConnect.get_connect()
+        if not self.domains:
+            stmt = """select url ,district_id,category_id,station_id
+                          from estate.district_index_url 
+                          where category_id in (
+                            SELECT category_id 
+                            from estate.category_rel
+                            where category_name = %s
+                          )  and district_id is not NULL 
+                        """
+        else:
+            domain = "( %s )" % ",".join(map(lambda x: "'%s'" %x, self.domains)) if not isinstance(self.domains, str) else "('%s')" % self.domains
+            stmt = """select url,district_id,category_id,station_id
+                      from estate.district_index_url 
+                      where category_id in (
+                        SELECT category_id 
+                        from estate.category_rel
+                        where category_name = %s
+                      ) and station_id in (
+                        select station_id
+                        from estate.station_rel
+                        where station_name in {}
+                      ) and district_id is not NULL """.format(domain)
+
+        with cnx.cursor(pymysql.cursors.DictCursor) as cursor:
+            cursor.execute(stmt, (self.category_name,))
+            items = cursor.fetchall()
+        cnx.close()
+        for item in items:
+            url = item.pop("url")
+            meta = item
+            yield Request(url=url, meta=meta)
 
     def parse_start_url(self, response):
-
+        meta = get_meta_info(response.meta)
         # 链家页面页码由 js生成
         if '.lianjia.com' in response.url:
             r = re.compile('{page}')
@@ -230,7 +260,7 @@ class AgencySpider(scrapy.spiders.CrawlSpider):
             if page_num:
                 for i in range(1,int(page_num)+1):
                     url_path = response.urljoin(r.sub("%i" %i, base_path))
-                    yield Request(url=url_path, callback=self.parse_indexpage)
+                    yield Request(url=url_path, callback=self.parse_indexpage,meta=meta)
             else:
                 for item in self.parse_indexpage(response):
                     yield item
@@ -243,7 +273,7 @@ class AgencySpider(scrapy.spiders.CrawlSpider):
                 for i in range(1,max(map(int,page_num))+1):
                     url_path = response.urljoin(r.sub("%i/" %i,base_path))
                     self.logger.critical("url: %s",url_path)
-                    yield Request(url=url_path, callback=self.parse_indexpage)
+                    yield Request(url=url_path, callback=self.parse_indexpage, meta=meta)
 
             else:
                 for item in self.parse_indexpage(response):
@@ -276,9 +306,22 @@ class AgencySpider(scrapy.spiders.CrawlSpider):
         for item in items:
             yield item
 
+    def _loads_ids(self, l, response):
+        l.add_value("district_id", response.meta.get("district_id"))
+        l.add_value("category_id", response.meta.get("category_id"))
+        l.add_value("station_id", response.meta.get("station_id"))
+
+    def _loads_housekeeping(self, l, response):
+        l.add_value("source", response.url)
+        l.add_value("project", self.settings.get("BOT_NAME"))
+        l.add_value("spider", self.name)
+        l.add_value("server", socket.gethostname())
+        l.add_value("dt", datetime.datetime.utcnow())
+
     def parse_lianjia(self, response):
         self.logger.info("process lianjia url")
         ul = response.xpath('//ul[@class="agent-lst"]/li')
+
         for li in ul:
             l = ItemLoader(item=AgentItem(), selector=li)
             l.default_output_processor = TakeFirst()
@@ -291,12 +334,10 @@ class AgencySpider(scrapy.spiders.CrawlSpider):
             l.add_xpath("recent_activation", './/div[@class="achievement"]/span/text()',
                         MapCompose(lambda x: int(x)), re = r"(\d+)套")
 
-            # housekeeping
-            l.add_value("source", response.url)
-            l.add_value("project", self.settings.get("BOT_NAME"))
-            l.add_value("spider", self.name)
-            l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.utcnow())
+            # ids
+            self._loads_ids(l,response)
+            #  housekeeping
+            self._loads_housekeeping(l, response)
 
             yield l.load_item()
 
@@ -314,12 +355,10 @@ class AgencySpider(scrapy.spiders.CrawlSpider):
             l.add_xpath("dist_name",'(//span[@class="elems-l"]//a[@class="selected-item"])[1]//text()')
             l.add_xpath("subdist_name",'(//span[@class="elems-l"]//a[@class="selected-item"])[2]//text()')
 
-            # housekeeping
-            l.add_value("source", response.url)
-            l.add_value("project", self.settings.get("BOT_NAME"))
-            l.add_value("spider", self.name)
-            l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.utcnow())
+            # ids
+            self._loads_ids(l, response)
+            #  housekeeping
+            self._loads_housekeeping(l, response)
 
             yield l.load_item()
 
@@ -336,12 +375,10 @@ class AgencySpider(scrapy.spiders.CrawlSpider):
                         MapCompose(lambda x: int(x)), re = r"\d+")
             l.add_xpath("history_amount", './/span[@class="con fl"]/em/text()')
 
-            # housekeeping
-            l.add_value("source", response.url)
-            l.add_value("project", self.settings.get("BOT_NAME"))
-            l.add_value("spider", self.name)
-            l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.utcnow())
+            # ids
+            self._loads_ids(l, response)
+            #  housekeeping
+            self._loads_housekeeping(l, response)
 
             yield l.load_item()
 
@@ -364,12 +401,10 @@ class AgencySpider(scrapy.spiders.CrawlSpider):
                         ,re = r"\d+")
             l.add_xpath("rent_house_amount", './/div[@class="outstanding"]//p[2]/a/text()'
                         , re=r"\d+")
-            # housekeeping
-            l.add_value("source", response.url)
-            l.add_value("project", self.settings.get("BOT_NAME"))
-            l.add_value("spider", self.name)
-            l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.utcnow())
+            # ids
+            self._loads_ids(l, response)
+            #  housekeeping
+            self._loads_housekeeping(l, response)
 
             yield l.load_item()
 
@@ -386,12 +421,11 @@ class AgencySpider(scrapy.spiders.CrawlSpider):
             l.add_xpath("dist_name", '//ul[@class="f-clear"]/li[@class="item current"]//text()')
             l.add_xpath("subdist_name",'//a[@class="subway-item current"]//text()')
             l.add_xpath("company", '//span[@class="bi-text broker-company"]/text()')
-            # housekeeping
-            l.add_value("source", response.url)
-            l.add_value("project", self.settings.get("BOT_NAME"))
-            l.add_value("spider", self.name)
-            l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.utcnow())
+
+            # ids
+            self._loads_ids(l, response)
+            #  housekeeping
+            self._loads_housekeeping(l, response)
 
             yield l.load_item()
 
@@ -410,12 +444,10 @@ class AgencySpider(scrapy.spiders.CrawlSpider):
             l.add_xpath("subdist_name",'(//a[@class="orange"])[2]//text()')
             l.add_xpath("second_house_amount", './/b[@class="ml03"]', re=r"(\d+)套")
 
-            # housekeeping
-            l.add_value("source", response.url)
-            l.add_value("project", self.settings.get("BOT_NAME"))
-            l.add_value("spider", self.name)
-            l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.utcnow())
+            # ids
+            self._loads_ids(l, response)
+            #  housekeeping
+            self._loads_housekeeping(l, response)
 
             yield l.load_item()
 
@@ -440,13 +472,10 @@ class AgencySpider(scrapy.spiders.CrawlSpider):
             l.add_xpath("rent_house_amount", './/p[@class="iconsleft1"]/text()',
                          MapCompose(lambda x: int(x)), re ='租赁(\d+)')
 
-
-            # housekeeping
-            l.add_value("source", response.url)
-            l.add_value("project", self.settings.get("BOT_NAME"))
-            l.add_value("spider", self.name)
-            l.add_value("server", socket.gethostname())
-            l.add_value("dt", datetime.datetime.utcnow())
+            # ids
+            self._loads_ids(l, response)
+            #  housekeeping
+            self._loads_housekeeping(l, response)
 
             yield l.load_item()
 
