@@ -199,7 +199,7 @@ class AgentOldDistrictSpider(BasicDistrictSpider):
 
 class AgencyOldSpider(scrapy.spiders.CrawlSpider):
     name = "AgencyOldSpider"
-    category_name = "agency"
+    category_name = "经纪人"
     domains = "安居客"
     xpaths = ['//ul[@class="pageLink clearfix"]', # ganji
               '//div[@class="pager-inner"]',                  # centanet
