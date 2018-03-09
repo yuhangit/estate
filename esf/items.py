@@ -59,3 +59,7 @@ class AgentItem(HouseKeepingItem):
     company = Field()
     address = Field()
     register_date = Field()
+
+    district_id = Field()
+    station_id = Field()
+    category_id = Field()
