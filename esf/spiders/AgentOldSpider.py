@@ -281,7 +281,7 @@ class AgencyOldSpider(scrapy.spiders.Spider):
             for item in self.parse_indexpage(response):
                 yield item
 
-            for domain, xpath in self.xpaths:
+            for domain, xpath in self.xpaths.items():
                 if domain in response.url:
                     nextpage_urls = response.xpath(xpath).extract()
                     for url in nextpage_urls:
