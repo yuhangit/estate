@@ -1,7 +1,10 @@
 import pymysql
 from scrapy.exceptions import IgnoreRequest
 from scrapehelper import DBConnect
+from scrapy.http import Request
+import logging
 
+logger = logging.getLogger(__name__)
 
 class SkipExistUrlMiddleware(object):
     @classmethod
@@ -10,6 +13,7 @@ class SkipExistUrlMiddleware(object):
 
     def __init__(self, *args, **kwargs):
         self.report_connection_error = None
+        self.logger = logger
 
     def check_exists(self, url):
         try:
@@ -27,3 +31,13 @@ class SkipExistUrlMiddleware(object):
     def process_request(self, request, spider):
         if self.check_exists(request.url):
             raise IgnoreRequest("url <%s> has already processed" % request.url)
+
+    def process_spider_out(self, response, result, spider):
+        for x in result:
+            if not isinstance(x, Request):
+                yield x
+            else:
+                if self.check_exists(x.url):
+                    self.logger.info("request<%s> have been scraped already, skip it", x.url)
+                else:
+                    yield x

@@ -18,7 +18,7 @@ import chardet
 
 
 class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
-    start_urls = [ 'http://house.ks.js.cn/secondhand.asp']
+    start_urls = [ 'http://house.ks.js.cn/secondhand.asp?page=58&wn=&g=&w=&s=0&j=&x=&q=&l=&regid=']
     name = 'KunShanAllScrapeSpider'
     spc_reg = re.compile(r"\s+")
 
@@ -33,11 +33,6 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
     )
 
     def parse_item(self,response):
-        # 检测 response 编码, 替换成utf-8
-        encoding = chardet.detect(response.body)['encoding']
-        if encoding != "utf-8":
-            self.logger.info("response <%s> encode is not utf-8 replace it", response.url)
-            response.replace(body = response.body.decode(encoding,"replace").encode("utf-8"))
 
         # agency table
         l = ItemLoader(item=AgentItem(), response=response)
@@ -48,7 +43,7 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         l.item.setdefault("company", None)
         l.add_xpath("company", '//li[@class="st14 stb starial"]//text()')
         l.add_xpath("address", '//div[@class="xflilist"]/div[3]//text()',
-                    re = r'：(\w+)')
+                    re=r'：(\w+)')
         l.add_xpath("register_date", '//div[@class="jbfx"]/text()', re=r'登记日期：([\d/]+)')
 
         l.add_value("city_name", self.city_name)

@@ -46,18 +46,17 @@ TELNETCONSOLE_ENABLED = True
 
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
-#    'esf.middlewares.EsfSpiderMiddleware': 543,
-#}
+SPIDER_MIDDLEWARES = {
+   'esf.middlewares.SkipExistUrl.SkipExistUrlMiddleware':100,
+}
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
    #'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
     # 'esf.middlewares.proxy.TorProxyMiddleware' : 400,
-   'scrapy.downloadermiddlewares.retry.RetryMiddleware': None, # this middleware used to retry retry_codes
+   'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,  # this middleware used to retry retry_codes
     'esf.middlewares.proxy.HTTPProxyMiddleware': 400,
-    'esf.middlewares.SkipExistUrl.SkipExistUrlMiddleware':100,
    # 'esf.middlewares.CustomRetry.CustomRetryMiddleware': 500,
     'scrapy.downloadermiddlewares.redirect.RedirectMiddleware':None,
     'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware':None,
@@ -75,7 +74,7 @@ DOWNLOADER_MIDDLEWARES = {
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     # 'esf.pipelines.SqlitePipeline': 300,
-   'esf.pipelines.MysqlWriter': 400
+   # 'esf.pipelines.MysqlWriter': 400
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

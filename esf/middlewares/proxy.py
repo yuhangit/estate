@@ -156,6 +156,8 @@ class HTTPProxyMiddleware(object):
                 i += 1
         except KeyError:
             logging.log(logging.ERROR, 'Error while removing failed proxy')
+        except Exception as e:
+            self.loger.exception("exception occurred when remove proxy <%s>: %s", failed_proxy, traceback.format_exc())
         return False
 
     def process_exception(self, request, exception, spider):
