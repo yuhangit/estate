@@ -32,7 +32,7 @@ class SkipExistUrlMiddleware(object):
         if self.check_exists(request.url):
             raise IgnoreRequest("url <%s> has already processed" % request.url)
 
-    def process_spider_out(self, response, result, spider):
+    def process_spider_output(self, response, result, spider):
         for x in result:
             if not isinstance(x, Request):
                 yield x

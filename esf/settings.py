@@ -47,7 +47,7 @@ TELNETCONSOLE_ENABLED = True
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 SPIDER_MIDDLEWARES = {
-   'esf.middlewares.SkipExistUrl.SkipExistUrlMiddleware':100,
+   'esf.middlewares.SkipExistUrl.SkipExistUrlMiddleware': 100,
 }
 
 # Enable or disable downloader middlewares
