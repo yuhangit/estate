@@ -37,7 +37,7 @@ class DBConnect:
     def get_connect():
         url = get_project_settings().get("MYSQL_PIPELINE_URL")
         paras = DBConnect.parse_mysql_url(url)
-        cnx = pymysql.connect(**paras, charset='utf8',use_unicode=True,)
+        cnx = pymysql.connect(charset='utf8',use_unicode=True, **paras, )
         return cnx
 
 
