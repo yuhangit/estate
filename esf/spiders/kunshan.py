@@ -107,14 +107,14 @@ class KunshanAllScrapeScripe(scrapy.spiders.CrawlSpider):
         cnx = pymysql.connect(charset="utf8",**db_para)
         with cnx.cursor() as cursor:
 
-            cnt = cursor.execute("""DELETE from estate.agencies_temp 
+            cnt = cursor.execute("""DELETE from estate.agencies 
                                     where name is null and station_id in 
                                         (select station_id
                                         from station_rel
                                         where station_name= %s) """, (self.station_name,))
 
             self.logger.info("delete %s from estate.agencies where name is null and dist_name = '%s'", cnt, self.dist_name,)
-            cnt = cursor.execute("""DELETE from estate.properties_temp 
+            cnt = cursor.execute("""DELETE from estate.properties 
                                     where agent_name is null and station_id in 
                                       (select station_id from station_rel where station_name = %s) """, (self.station_name, ))
             self.logger.info("delete %s from estate.properties station_name = '%s' and name is NULL ", cnt, self.station_name)

@@ -51,7 +51,7 @@ class SqlitePipeline(object):
         self.logger.info("start pipelien %s process spider %s" %(self.collection_name, spider.name))
         if isinstance(item, PropertyItem):
 
-            stmt = '''insert into properties_temp(title, url, price, address, source, project, server, dt,
+            stmt = '''insert into properties(title, url, price, address, source, project, server, dt,
                           spider, agent_name, agent_company, agent_phone, recent_activation, 
                           district_id, station_id, category_id) 
                       values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
@@ -90,7 +90,7 @@ class SqlitePipeline(object):
                     ))
 
         elif isinstance(item, AgentItem):
-            stmt = """insert into agencies_temp(name, telephone, history_amount, recent_activation, source, project,
+            stmt = """insert into agencies(name, telephone, history_amount, recent_activation, source, project,
                           spider, server, dt, second_house_amount, new_house_amount, rent_house_amount, company, 
                           address, register_date, district_id, station_id, category_id)
                       values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
@@ -205,7 +205,7 @@ class MysqlWriter(object):
 
         if isinstance(item, PropertyItem):
 
-            stmt = '''insert into estate.properties_temp(title, url, price, address, source, project, server, dt,
+            stmt = '''insert into estate.properties(title, url, price, address, source, project, server, dt,
                           spider, agent_name, agent_company, agent_phone, recent_activation, 
                           district_id, station_id, category_id) 
                       values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
@@ -262,7 +262,7 @@ class MysqlWriter(object):
                                    item.get("server"), item.get("source"), item.get("project"), item.get("spider"),
                                    item.get("dt")))
         elif isinstance(item, AgentItem):
-            stmt = """insert into agencies_temp(name, telephone, history_amount, recent_activation, source, project,
+            stmt = """insert into agencies(name, telephone, history_amount, recent_activation, source, project,
                           spider, server, dt, second_house_amount, new_house_amount, rent_house_amount, company, 
                           address, register_date, district_id, station_id, category_id)
                       values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)

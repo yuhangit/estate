@@ -18,10 +18,10 @@ class SkipExistUrlMiddleware(object):
     def check_exists(self, url):
         try:
             with DBConnect.get_connect().cursor() as cursor:
-                cursor.execute("select count(*) from estate.properties_temp where url = %s", (url,))
+                cursor.execute("select count(*) from estate.properties where url = %s", (url,))
                 if cursor.fetchone()[0] > 0:
                     return True
-                cursor.execute("select count(*) from estate.agencies_temp where source =%s", (url,))
+                cursor.execute("select count(*) from estate.agencies where source =%s", (url,))
                 if cursor.fetchone()[0] > 0:
                     return True
             return False

@@ -39,7 +39,7 @@ with pymysql.connect(**db_paras(MYSQL_PIPELINE_URL)) as cursor:
         as select distinct name,telephone,history_amount,recent_activation
             ,source,project, spider,server, dt, second_house_amount,new_house_amount, rent_house_amount
             , company,address, register_date, district_id, station_id,category_id 
-            from estate.agencies_temp;
+            from estate.agencies;
     """)
     cursor.execute("select city_id,dist_id, subdist_id, station_id, category_id,telephone from estate.v_agencies_top50")
     rows = cursor.fetchall()
