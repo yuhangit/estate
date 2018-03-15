@@ -162,7 +162,7 @@ class MysqlWriter(object):
             if all_ids:
                 ids.update(self.retrieve_id(item, all_ids))
             # raise NotConfigured
-            item.update(ids)
+            # item.update(ids) -- not support
             self.logger.info("ids contain %s" %ids)
             yield self.dbpool.runInteraction(self.do_insert, item, ids)
         except pymysql.OperationalError:
