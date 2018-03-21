@@ -134,7 +134,7 @@ class NewHouseDistrictSpider(BasicDistrictSpider):
     #         l.add_value("dt", datetime.datetime.utcnow())
     #
     #         yield l.load_item()
-
+import pymysql
 
 class NewHousePropertySpider(BasicPropertySpider):
     name = "NewHousePropertySpider"
@@ -153,6 +153,26 @@ class NewHousePropertySpider(BasicPropertySpider):
         ".fangdd.com": '//div[@class="vzBCU"]//p[@class="_1AXFZ"]/a[1]/@href',
         ".qfang.com": '//div[@class="show-detail fl"]/p[@class="house-title"]/a/@href',
     }
+
+# temp
+    def start_requests(self):
+        cnx = DBConnect.get_connect()
+        # get domains name
+        with cnx.cursor(pymysql.cursors.DictCursor) as cursor:
+            cursor.execute("""
+            select url,district_id,category_id,station_id
+          from district_index_url
+          where district_id in (select district_id from district_rel 
+        where city_name = "上海周边" and dist_name = "昆山")
+	      and station_id != 12
+        and category_id = (select category_id from category_rel where category_name = "新房");
+            """)
+            items = cursor.fetchall()
+        cnx.close()
+        for item in items:
+            url = item.pop("url")
+            meta = item
+            yield Request(url=url, meta=meta)
 
     def parse_centanet(self, response):
         self.logger.info("process centanet url")
