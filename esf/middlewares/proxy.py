@@ -202,5 +202,6 @@ class HTTPProxyMiddleware(object):
             req.meta["redirect_302"] = req.meta.get("redirect_302", 0) +1
             self.loger.info("url <%s> redirect to <%s> %s times",request.url, response.url, req.meta["redirect_302"])
             if req.meta.get("redirect_302", 0) > 10:
+                response.status = 200
                 return response
         return req

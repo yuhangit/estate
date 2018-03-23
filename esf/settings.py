@@ -58,7 +58,7 @@ DOWNLOADER_MIDDLEWARES = {
    'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,  # this middleware used to retry retry_codes
     'esf.middlewares.proxy.HTTPProxyMiddleware': 400,
    # 'esf.middlewares.CustomRetry.CustomRetryMiddleware': 500,
-   #  'scrapy.downloadermiddlewares.redirect.RedirectMiddleware':None,  # allow redriect where Item not scrape so do worry validation page
+    'scrapy.downloadermiddlewares.redirect.RedirectMiddleware':None,
     'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware':None,
     "scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware":None,
     'esf.middlewares.user_agent.RandomUserAgentMiddleware': 300
