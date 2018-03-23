@@ -58,7 +58,7 @@ DOWNLOADER_MIDDLEWARES = {
    'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,  # this middleware used to retry retry_codes
     'esf.middlewares.proxy.HTTPProxyMiddleware': 400,
    # 'esf.middlewares.CustomRetry.CustomRetryMiddleware': 500,
-    'scrapy.downloadermiddlewares.redirect.RedirectMiddleware':None,
+   #  'scrapy.downloadermiddlewares.redirect.RedirectMiddleware':None,  # allow redriect where Item not scrape so do worry validation page
     'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware':None,
     "scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware":None,
     'esf.middlewares.user_agent.RandomUserAgentMiddleware': 300
@@ -123,8 +123,6 @@ REQUESTS_HEADERS = {
 
 # user for store data spider_name + STORE_DATABASE_BASE
 # STORE_DATABASE = "data/esf_urls_test.db"
-STORE_DATABASE = "data/esf_urls.db"
-
 
 CATEGORIES = {"经纪人": {
                         "https://sh.5i5j.com/jingjiren/n0/": {"city_name": "上海", "station_name": "我爱我家", "category_name": "经纪人"},

@@ -24,6 +24,9 @@ class SkipExistUrlMiddleware(object):
                 cursor.execute("select count(*) from estate.agencies where source =%s", (url,))
                 if cursor.fetchone()[0] > 0:
                     return True
+                cursor.execute("select count(*) from estate.district_index_url where url=%s",(url,))
+                if cursor.fetchone()[0] > 0:
+                    return True
             return False
         except pymysql.OperationalError as e:
             self.check_exists(url)
